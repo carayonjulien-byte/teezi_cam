@@ -7,7 +7,6 @@ export interface CameraEngineHandle {
   stopAndGetRecording: () => Promise<Blob | null>;
 }
 
-// 1. AJOUT DE LA PROPRIÉTÉ FACINGMODE
 interface CameraEngineProps {
   bufferSeconds?: number;
   className?: string;
@@ -15,12 +14,10 @@ interface CameraEngineProps {
 }
 
 export const CameraEngine = forwardRef<CameraEngineHandle, CameraEngineProps>(
-  // 2. RÉCUPÉRATION DE FACINGMODE (Par défaut sur 'environment' : caméra arrière)
   ({ bufferSeconds = 30, className = '', facingMode = 'environment' }, ref) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     
-    // On isole l'en-tête de la vidéo (indispensable)
     const headerChunkRef = useRef<Blob | null>(null);
     const chunksRef = useRef<Blob[]>([]);
     const streamRef = useRef<MediaStream | null>(null);
@@ -31,15 +28,19 @@ export const CameraEngine = forwardRef<CameraEngineHandle, CameraEngineProps>(
       let isCancelled = false;
       let currentStream: MediaStream | null = null;
 
-      // On ajoute 10 secondes "poubelle" pour absorber la pixélisation due au découpage
       const MAX_CHUNKS = bufferSeconds + 10; 
 
       async function initCamera() {
         try {
+          // CORRECTION ICI : On utilise la variable "facingMode" au lieu de bloquer sur 'environment'
           const stream = await navigator.mediaDevices.getUserMedia({
-            // 3. UTILISATION DE LA VARIABLE ICI
-            video: { facingMode: facingMode, width: { ideal: 720 }, height: { ideal: 1280 } },
-            audio: true,
+            video: { 
+              facingMode: facingMode, 
+              width: { ideal: 1080 },
+              height: { ideal: 1920 }, // Force le format vertical (portrait)
+              frameRate: { ideal: 60 }
+            },
+            audio: true
           });
 
           if (isCancelled) {
@@ -74,12 +75,9 @@ export const CameraEngine = forwardRef<CameraEngineHandle, CameraEngineProps>(
           mediaRecorder.ondataavailable = (event) => {
             if (event.data && event.data.size > 0) {
               if (!headerChunkRef.current) {
-                // On sauvegarde le tout premier bloc (Header WebM)
                 headerChunkRef.current = event.data;
               } else {
                 chunksRef.current.push(event.data);
-                
-                // LIMITE STRICTE DE MÉMOIRE (Batterie préservée !)
                 if (chunksRef.current.length > MAX_CHUNKS) {
                   chunksRef.current.shift();
                 }
@@ -87,7 +85,7 @@ export const CameraEngine = forwardRef<CameraEngineHandle, CameraEngineProps>(
             }
           };
 
-          mediaRecorder.start(1000); // 1 bloc par seconde
+          mediaRecorder.start(1000);
         } catch (err) {
           console.error("Erreur d'accès caméra :", err);
         }
@@ -104,7 +102,6 @@ export const CameraEngine = forwardRef<CameraEngineHandle, CameraEngineProps>(
           currentStream.getTracks().forEach((track) => track.stop());
         }
       };
-    // 4. AJOUT DE FACINGMODE AUX DÉPENDANCES DU USEEFFECT
     }, [bufferSeconds, facingMode]);
 
     useImperativeHandle(ref, () => ({
@@ -145,7 +142,7 @@ export const CameraEngine = forwardRef<CameraEngineHandle, CameraEngineProps>(
           autoPlay
           playsInline
           muted
-          className="absolute inset-0 w-full h-full object-contain"
+          className="w-full h-full object-cover"
         />
       </div>
     );
