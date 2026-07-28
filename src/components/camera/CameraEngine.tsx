@@ -32,13 +32,12 @@ export const CameraEngine = forwardRef<CameraEngineHandle, CameraEngineProps>(
 
       async function initCamera() {
         try {
-          // CORRECTION ICI : On utilise la variable "facingMode" au lieu de bloquer sur 'environment'
           const stream = await navigator.mediaDevices.getUserMedia({
             video: { 
               facingMode: facingMode, 
-              width: { ideal: 720 },   // On peut baisser à 720p (HD) pour alléger énormément le processeur
+              width: { ideal: 720 },
               height: { ideal: 1280 }, 
-              frameRate: { ideal: 30 } // <-- On passe de 60 à 30 FPS (Crucial pour la fluidité)
+              frameRate: { ideal: 30 }
             },
             audio: true
           });
@@ -53,7 +52,6 @@ export const CameraEngine = forwardRef<CameraEngineHandle, CameraEngineProps>(
 
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
-            // Mode miroir automatique si on est en caméra frontale ('user')
             if (facingMode === 'user') {
               videoRef.current.style.transform = 'scaleX(-1)';
             } else {
@@ -142,7 +140,8 @@ export const CameraEngine = forwardRef<CameraEngineHandle, CameraEngineProps>(
           autoPlay
           playsInline
           muted
-          className="w-full h-full object-cover"
+          // CORRECTION ICI : object-contain au lieu de object-cover
+          className="w-full h-full object-contain"
         />
       </div>
     );
