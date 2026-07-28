@@ -3,8 +3,8 @@
   "short_name": "TEEZI",
   "description": "Analyseur de swing de golf instantané",
   "start_url": "/app",
-  "scope": "/app",
-  "display": "standalone",
+  "scope": "/",
+  "display": "standalone", 
   "background_color": "#000000",
   "theme_color": "#000000",
   "icons": [
