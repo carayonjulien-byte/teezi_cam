@@ -37,8 +37,10 @@ export const CameraEngine = forwardRef<CameraEngineHandle, CameraEngineProps>(
               facingMode: facingMode, 
               width: { ideal: 720 },
               height: { ideal: 1280 }, 
+              aspectRatio: { ideal: 0.5625 },
+              resizeMode: 'crop-and-scale',
               frameRate: { ideal: 30 }
-            },
+            } as any, // <--- AJOUTE SIMPLEMENT "as any" ICI
             audio: true
           });
 
