@@ -35,12 +35,10 @@ export const CameraEngine = forwardRef<CameraEngineHandle, CameraEngineProps>(
           const stream = await navigator.mediaDevices.getUserMedia({
             video: { 
               facingMode: facingMode, 
-              width: { ideal: 720 },
-              height: { ideal: 1280 }, 
-              aspectRatio: { ideal: 0.5625 },
-              resizeMode: 'crop-and-scale',
               frameRate: { ideal: 30 }
-            } as any, // <--- AJOUTE SIMPLEMENT "as any" ICI
+              // C'EST TOUT ! On supprime width, height, aspectRatio et resizeMode.
+              // On laisse Android gérer l'orientation tout seul comme un grand.
+            },
             audio: true
           });
 
