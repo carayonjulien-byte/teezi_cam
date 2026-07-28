@@ -36,9 +36,9 @@ export const CameraEngine = forwardRef<CameraEngineHandle, CameraEngineProps>(
           const stream = await navigator.mediaDevices.getUserMedia({
             video: { 
               facingMode: facingMode, 
-              width: { ideal: 1080 },
-              height: { ideal: 1920 }, // Force le format vertical (portrait)
-              frameRate: { ideal: 60 }
+              width: { ideal: 720 },   // On peut baisser à 720p (HD) pour alléger énormément le processeur
+              height: { ideal: 1280 }, 
+              frameRate: { ideal: 30 } // <-- On passe de 60 à 30 FPS (Crucial pour la fluidité)
             },
             audio: true
           });
