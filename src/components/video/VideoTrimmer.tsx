@@ -545,9 +545,9 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
           {isExporting ? (
             <><div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" /><span>Génération et Sauvegarde...</span></>
           ) : success ? (
-            <><Check className="w-4 h-4 text-black stroke-[3]" /><span>Sauvegardé dans la session !</span></>
+            <><Check className="w-4 h-4 text-black stroke-[3]" /><span>Vidéo sauvegardée !</span></>
           ) : (
-            <><Save className="w-4 h-4 text-black" /><span className="uppercase tracking-widest">Sauvegarder dans la session</span></>
+            <><Save className="w-4 h-4 text-black" /><span className="uppercase tracking-widest">Enregistrer la vidéo</span></>
           )}
         </button>
       </div>

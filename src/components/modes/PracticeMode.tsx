@@ -246,7 +246,7 @@ export default function PracticeMode({ bufferSeconds = 30, onBackToMenu }: Pract
                 ) : (
                   <>
                     <Eye className="w-4 h-4 text-black shrink-0" />
-                    <span className="tracking-wider uppercase text-[11px] font-black">Analyser mon swing</span>
+                    <span className="tracking-wider uppercase text-[11px] font-black">Voir mon swing</span>
                   </>
                 )}
               </button>
