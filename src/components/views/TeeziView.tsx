@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Clock, Play, Video, Film, Lock, Target, AlertCircle } from 'lucide-react';
 import PracticeMode from '@/components/modes/PracticeMode';
 import SessionLibraryView from '@/components/views/SessionLibraryView';
-import { getSessionVideos, clearSession, SessionVideo } from '@/utils/sessionStore';
+import { getSessionVideos, clearSession, deleteVideoFromSession, SessionVideo } from '@/utils/sessionStore';
 
 const VideoThumbnail = ({ blob }: { blob: Blob }) => {
   const [url, setUrl] = useState<string>('');
@@ -54,6 +54,24 @@ export function TeeziView() {
     }
   };
 
+  const handleDeleteSingleVideo = async (id: number) => {
+    try {
+      await deleteVideoFromSession(id);
+      await loadVideos(); // On rafraîchit la liste des vidéos
+    } catch (error) {
+      console.error("Erreur lors de la suppression de la vidéo :", error);
+    }
+  };
+
+  // NOUVELLE FONCTION : Bloque l'ouverture si on est à 15 vidéos
+  const handleOpenPractice = () => {
+    if (sessionVideos.length >= 15) {
+      alert("Mémoire pleine (15/15) ⚠️\nVeuillez supprimer des vidéos dans la section 'Vidéos en cours' avant de relancer le Practice.");
+    } else {
+      setIsPracticeOpen(true);
+    }
+  };
+
   if (isPracticeOpen) {
     return (
       <div className="fixed inset-0 z-50 bg-black flex flex-col w-screen h-screen">
@@ -70,6 +88,7 @@ export function TeeziView() {
         videos={sessionVideos}
         onClose={() => setIsLibraryOpen(false)}
         onClearSession={handleClearSession}
+        onDeleteVideo={handleDeleteSingleVideo}
       />
     );
   }
@@ -100,7 +119,8 @@ export function TeeziView() {
         </div>
 
         <div className="flex gap-4 overflow-x-auto pb-2 pt-1 snap-x snap-mandatory scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none]">
-          <div onClick={() => setIsPracticeOpen(true)} className="min-w-[240px] flex-1 snap-center p-5 rounded-2xl bg-zinc-900 border border-orange-500/50 shadow-[0_0_20px_rgba(249,115,22,0.1)] transition-all cursor-pointer flex flex-col justify-between">
+          {/* CORRECTION ICI : On utilise handleOpenPractice */}
+          <div onClick={handleOpenPractice} className="min-w-[240px] flex-1 snap-center p-5 rounded-2xl bg-zinc-900 border border-orange-500/50 shadow-[0_0_20px_rgba(249,115,22,0.1)] transition-all cursor-pointer flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div className="w-10 h-10 rounded-xl bg-orange-500 text-black flex items-center justify-center"><Clock className="w-5 h-5" /></div>

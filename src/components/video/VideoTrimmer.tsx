@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { RotateCcw, Download, Check, Scissors, Play, Pause, Gauge, Plus, Minus, FileText, Calendar, Tag, Eye, EyeOff, Grid, Pencil, Circle, Trash2, Save } from 'lucide-react';
 import { Shape } from '@/components/modes/CalibrationMode';
-import { saveVideoToSession } from '@/utils/sessionStore';
+import { saveVideoToSession, getVideoCount } from '@/utils/sessionStore';
 
 interface VideoTrimmerProps {
   videoBlob: Blob;
@@ -231,6 +231,17 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
           const finalBlob = new Blob(chunks, { type: 'video/webm' });
           
           try {
+            // 1. ON VÉRIFIE LA LIMITE AVANT DE SAUVEGARDER
+            const currentCount = await getVideoCount();
+            
+            if (currentCount >= 15) {
+              alert("Mémoire pleine (15/15) ⚠️\nImpossible d'enregistrer plus de vidéos. Retour à l'accueil pour faire du tri.");
+              window.location.href = '/app'; // Redirige vers l'accueil
+              resolve(false);
+              return; // On stoppe la sauvegarde
+            }
+
+            // 2. LA PLACE EST LIBRE, ON SAUVEGARDE
             const timeString = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
             await saveVideoToSession({
               blob: finalBlob,
@@ -239,6 +250,15 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
               note: sessionNote.trim(),
               duration: `${Math.max(0, endTime - startTime).toFixed(1)}s`
             });
+            
+            // 3. ON PRÉVIENT SI C'ÉTAIT LA TOUTE DERNIÈRE PLACE (La 15ème)
+            if (currentCount + 1 === 15) {
+              alert("Vidéo sauvegardée ! ✅\nAttention, votre mémoire est maintenant pleine (15/15). Vous allez être redirigé vers l'accueil.");
+              window.location.href = '/app'; // Redirige vers l'accueil après la sauvegarde de la 15ème
+              resolve(true);
+              return;
+            }
+
             resolve(true);
           } catch (error) {
             console.error("Erreur de sauvegarde :", error);

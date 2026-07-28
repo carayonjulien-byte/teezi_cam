@@ -8,6 +8,8 @@ interface SessionLibraryViewProps {
   videos: SessionVideo[];
   onClose: () => void;
   onClearSession?: () => void;
+  // On ajoute la fonction de suppression unitaire ici
+  onDeleteVideo?: (id: number) => Promise<void>; 
 }
 
 const VideoThumbnail = ({ blob }: { blob: Blob }) => {
@@ -35,6 +37,7 @@ export default function SessionLibraryView({
   videos,
   onClose,
   onClearSession,
+  onDeleteVideo, // On récupère la fonction
 }: SessionLibraryViewProps) {
   const maxVideos = 15;
   const [playingVideo, setPlayingVideo] = useState<SessionVideo | null>(null);
@@ -83,11 +86,23 @@ export default function SessionLibraryView({
     URL.revokeObjectURL(url);
   };
 
+  // Nouvelle fonction pour la suppression unitaire
+  const handleDeleteSingle = async () => {
+    if (!playingVideo || !playingVideo.id || !onDeleteVideo) return;
+    
+    if (window.confirm("Voulez-vous vraiment supprimer cette vidéo ?")) {
+      await onDeleteVideo(playingVideo.id);
+      setPlayingVideo(null); // On ferme le lecteur
+    }
+  };
+
+
   if (playingVideo) {
     const videoUrl = URL.createObjectURL(playingVideo.blob);
     return (
       <div className="fixed inset-0 z-[60] bg-black flex flex-col w-screen h-screen text-white">
-        <div className="bg-black/90 backdrop-blur-xl px-6 py-4 flex items-center justify-between shrink-0 z-20">
+        <div className="bg-black/90 backdrop-blur-xl px-4 py-4 flex items-center justify-between shrink-0 z-20">
+          
           <button
             onClick={() => {
               setPlayingVideo(null);
@@ -99,7 +114,7 @@ export default function SessionLibraryView({
             <X className="w-5 h-5" />
           </button>
 
-          <div className="text-center px-4 flex-1 truncate">
+          <div className="text-center px-2 flex-1 truncate">
             <div className="flex items-center justify-center gap-2">
               <span className="text-sm font-black text-orange-500 uppercase tracking-wider">
                 {playingVideo.club || 'Swing'}
@@ -120,7 +135,15 @@ export default function SessionLibraryView({
             </p>
           </div>
 
-          <div className="w-10" />
+          {/* AJOUT : Le bouton supprimer en haut à droite du lecteur */}
+          <button
+            onClick={handleDeleteSingle}
+            className="w-10 h-10 bg-red-500/10 rounded-full flex items-center justify-center text-red-500 hover:bg-red-500/20 transition active:scale-95 cursor-pointer"
+            title="Supprimer la vidéo"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+
         </div>
 
         <div className="flex-1 min-h-0 w-full bg-black flex items-center justify-center relative">
@@ -169,7 +192,6 @@ export default function SessionLibraryView({
 
       <div className="flex-1 flex flex-col p-6 gap-6">
         
-        {/* --- NOUVEAU : WARNING EN HAUT AVANT LES VIDÉOS --- */}
         {videos.length > 0 && (
           <div className="bg-orange-500/10 border border-orange-500/20 px-4 py-3 rounded-2xl flex items-center gap-3 shrink-0">
             <AlertCircle className="w-5 h-5 text-orange-500 shrink-0" />

@@ -69,3 +69,29 @@ export const clearSession = async (): Promise<void> => {
     request.onerror = () => reject(request.error);
   });
 };
+
+// 5. Compter le nombre de vidéos
+export const getVideoCount = async (): Promise<number> => {
+  const db = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, 'readonly');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.count(); // Utilise la méthode native count() très rapide
+    
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+};
+
+// 6. Supprimer une seule vidéo
+export const deleteVideoFromSession = async (id: number): Promise<void> => {
+  const db = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.delete(id);
+    
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+};
