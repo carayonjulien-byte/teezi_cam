@@ -1,5 +1,3 @@
-// Fichier : src/app/app/layout.tsx
-
 export default function AppLayout({
   children,
 }: {
