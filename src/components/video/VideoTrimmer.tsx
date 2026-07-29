@@ -543,9 +543,9 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
 
         <button onClick={handleExportTrimmedVideo} disabled={isExporting} className="w-full py-3.5 rounded-2xl bg-orange-500 text-black font-extrabold text-xs shadow-[0_4px_20px_rgba(249,115,22,0.3)] hover:bg-orange-400 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-95">
           {isExporting ? (
-            <><div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" /><span>Génération et Sauvegarde...</span></>
+            <><div className="w-4 h-4 border-2 border-black border-t-transparent uppercase rounded-full animate-spin" /><span className="uppercase tracking-widest">Sauvegarde</span></>
           ) : success ? (
-            <><Check className="w-4 h-4 text-black stroke-[3]" /><span>Vidéo sauvegardée !</span></>
+            <><Check className="w-4 h-4 text-black uppercase stroke-[3]" /><span className="uppercase tracking-widest">Vidéo sauvegardée !</span></>
           ) : (
             <><Save className="w-4 h-4 text-black" /><span className="uppercase tracking-widest">Enregistrer la vidéo</span></>
           )}

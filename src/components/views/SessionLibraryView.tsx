@@ -162,7 +162,7 @@ export default function SessionLibraryView({
             onClick={handleShare}
             className="flex-1 bg-orange-500 text-black font-extrabold py-3.5 rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition shadow-lg uppercase text-xs tracking-wider cursor-pointer"
           >
-            <Share2 className="w-4 h-4" /> Partager (WhatsApp / Coach)
+            <Share2 className="w-4 h-4" /> Partager
           </button>
           <button
             onClick={handleDownloadSingle}
