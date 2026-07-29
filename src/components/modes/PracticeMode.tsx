@@ -76,14 +76,14 @@ export default function PracticeMode({ bufferSeconds = 30, onBackToMenu }: Pract
   const progressPercentage = Math.min((elapsed / bufferSeconds) * 100, 100);
 
   return (
-    // MODIFICATION ICI : h-[100dvh] au lieu de h-full pour verrouiller la hauteur exacte de l'écran mobile
+    // CONTENEUR PARENT : Fixé à 100dvh et interdiction absolue de scroller
     <div className="flex flex-col w-full h-[100dvh] bg-black select-none overflow-hidden">
       
       {/* --- MODE DIRECT --- */}
       {isLive && !isCalibrating && (
         <>
-          {/* 1. ZONE VIDÉO DÉDIÉE (PREND TOUT L'ESPACE RESTANT) */}
-          <div className="relative flex-1 min-h-0 w-full bg-zinc-950 flex items-center justify-center">
+          {/* 1. ZONE VIDÉO DÉDIÉE : flex-1 et min-h-0 pour prendre l'espace sans dépasser */}
+          <div className="relative flex-1 min-h-0 w-full bg-zinc-950 flex items-center justify-center overflow-hidden">
             
             <CameraEngine key={liveKey} ref={cameraRef} bufferSeconds={bufferSeconds} facingMode={facingMode} />
             
@@ -165,7 +165,7 @@ export default function PracticeMode({ bufferSeconds = 30, onBackToMenu }: Pract
             </div>
           </div>
 
-          {/* 2. PANNEAU DE CONTRÔLE INFÉRIEUR + SAFE AREA POUR LA BARRE ANDROID */}
+          {/* 2. PANNEAU DE CONTRÔLE : shrink-0 pour garder sa taille fixe sans forcer de scroll */}
           <div className="w-full bg-zinc-900 border-t border-white/10 p-5 shrink-0 flex flex-col justify-between shadow-2xl pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
             
             {/* Statut Enregistrement */}
@@ -268,9 +268,9 @@ export default function PracticeMode({ bufferSeconds = 30, onBackToMenu }: Pract
         />
       )}
 
-      {/* --- MODE ÉDITION / TRIMMER --- */}
+      {/* --- MODE ÉDITION / TRIMMER : Correction ici (on enlève le h-[100dvh] en trop) --- */}
       {!isLive && !isCalibrating && (
-        <div className="flex-1 flex flex-col w-full h-[100dvh] bg-black">
+        <div className="flex-1 flex flex-col w-full h-full bg-black overflow-hidden">
           {recordedBlob ? (
             <VideoTrimmer 
               videoBlob={recordedBlob} 
