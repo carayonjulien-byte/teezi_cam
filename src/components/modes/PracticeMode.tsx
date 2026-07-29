@@ -76,13 +76,13 @@ export default function PracticeMode({ bufferSeconds = 30, onBackToMenu }: Pract
   const progressPercentage = Math.min((elapsed / bufferSeconds) * 100, 100);
 
   return (
-    // CONTENEUR PARENT : Fixé à 100dvh et interdiction absolue de scroller
-    <div className="flex flex-col w-full h-[100dvh] bg-black select-none overflow-hidden">
+    // CONTENEUR STRICT : Hauteur dynamique fixe, interdiction totale de tout overflow
+    <div className="flex flex-col w-full h-[100dvh] bg-black select-none overflow-hidden fixed inset-0 z-50">
       
       {/* --- MODE DIRECT --- */}
       {isLive && !isCalibrating && (
         <>
-          {/* 1. ZONE VIDÉO DÉDIÉE : flex-1 et min-h-0 pour prendre l'espace sans dépasser */}
+          {/* 1. ZONE VIDÉO : flex-1 strict pour occuper tout l'espace restant sans dépasser */}
           <div className="relative flex-1 min-h-0 w-full bg-zinc-950 flex items-center justify-center overflow-hidden">
             
             <CameraEngine key={liveKey} ref={cameraRef} bufferSeconds={bufferSeconds} facingMode={facingMode} />
@@ -96,8 +96,8 @@ export default function PracticeMode({ bufferSeconds = 30, onBackToMenu }: Pract
               </div>
             )}
 
-            <div className="absolute inset-0 w-full h-full z-20 pointer-events-none">
-              <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible" xmlns="http://www.w3.org/2000/svg">
+            <div className="absolute inset-0 w-full h-full z-20 pointer-events-none overflow-hidden">
+              <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
                 {savedShapes.map((shape) => {
                   if (shape.type === 'line' && shape.x2 !== undefined && shape.y2 !== undefined) {
                     return (
@@ -165,34 +165,34 @@ export default function PracticeMode({ bufferSeconds = 30, onBackToMenu }: Pract
             </div>
           </div>
 
-          {/* 2. PANNEAU DE CONTRÔLE : shrink-0 pour garder sa taille fixe sans forcer de scroll */}
-          <div className="w-full bg-zinc-900 border-t border-white/10 p-5 shrink-0 flex flex-col justify-between shadow-2xl pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
+          {/* 2. PANNEAU INFÉRIEUR : Compact et sans marges superflues pour éviter tout débordement */}
+          <div className="w-full bg-zinc-900 border-t border-white/10 p-4 shrink-0 flex flex-col gap-2.5 shadow-2xl pb-[calc(1rem+env(safe-area-inset-bottom))]">
             
-            {/* Statut Enregistrement */}
-            <div className="flex items-center justify-between bg-black/40 p-3.5 rounded-2xl border border-white/5 mb-3">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500/10">
-                  <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
+            {/* Statut Enregistrement (Plus compact) */}
+            <div className="flex items-center justify-between bg-black/40 px-3 py-2.5 rounded-xl border border-white/5">
+              <div className="flex items-center gap-2.5">
+                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-red-500/10">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
                 </div>
                 <div>
-                  <h3 className="text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2">
-                    <Radio className="w-3.5 h-3.5 text-zinc-400" /> Live
+                  <h3 className="text-white text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                    <Radio className="w-3 h-3 text-zinc-400" /> Live
                   </h3>
-                  <p className="text-zinc-500 text-[10px] font-medium mt-0.5">Captation continue du mouvement</p>
+                  <p className="text-zinc-500 text-[9px] font-medium">Captation continue du mouvement</p>
                 </div>
               </div>
             </div>
 
             {/* Jauge de la Mémoire Tampon */}
-            <div className="flex flex-col gap-3 bg-zinc-950 p-4 rounded-2xl border border-white/5 mb-3">
-              <div className="flex justify-between items-end px-1">
-                <span className="text-[11px] font-bold text-zinc-300 uppercase tracking-wider">Mémoire Tampon</span>
-                <span className={`text-sm font-mono font-bold ${isBufferFull ? 'text-orange-500' : 'text-zinc-400'}`}>
+            <div className="flex flex-col gap-2 bg-zinc-950 p-3 rounded-xl border border-white/5">
+              <div className="flex justify-between items-end px-0.5">
+                <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Mémoire Tampon</span>
+                <span className={`text-xs font-mono font-bold ${isBufferFull ? 'text-orange-500' : 'text-zinc-400'}`}>
                   {isBufferFull ? `${bufferSeconds}s / ${bufferSeconds}s` : `${Math.floor(elapsed)}s / ${bufferSeconds}s`}
                 </span>
               </div>
               
-              <div className="w-full h-2.5 bg-zinc-800 rounded-full overflow-hidden">
+              <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
                 <div 
                   className={`h-full transition-all duration-100 ease-linear ${isBufferFull ? 'bg-orange-500' : 'bg-white'}`}
                   style={{ width: `${progressPercentage}%` }}
@@ -200,31 +200,31 @@ export default function PracticeMode({ bufferSeconds = 30, onBackToMenu }: Pract
               </div>
 
               {isBufferFull ? (
-                <div className="flex items-center gap-2 text-orange-400 mt-1 px-1">
-                  <RefreshCw className="w-3.5 h-3.5 animate-[spin_3s_linear_infinite]" />
-                  <span className="text-[10px] font-bold tracking-wide uppercase">Dernières {bufferSeconds}s prêtes pour l'analyse</span>
+                <div className="flex items-center gap-1.5 text-orange-400 px-0.5">
+                  <RefreshCw className="w-3 h-3 animate-[spin_3s_linear_infinite]" />
+                  <span className="text-[9px] font-bold tracking-wide uppercase">Dernières {bufferSeconds}s prêtes</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-zinc-500 mt-1 px-1">
-                  <div className="w-3.5 h-3.5 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin" />
-                  <span className="text-[10px] font-bold tracking-wide uppercase">Chargement de la mémoire...</span>
+                <div className="flex items-center gap-1.5 text-zinc-500 px-0.5">
+                  <div className="w-3 h-3 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-[9px] font-bold tracking-wide uppercase">Chargement mémoire...</span>
                 </div>
               )}
             </div>
 
             {/* Boutons d'Action Principaux */}
-            <div className="flex gap-3">
+            <div className="flex gap-2.5 pt-0.5">
               <button
                 onClick={handleOpenCalibration}
                 disabled={isLoading || elapsed < 1}
-                className="flex-[0.8] py-4 px-4 rounded-2xl bg-zinc-800 border border-white/5 text-white font-bold hover:bg-zinc-700 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed shadow-md"
+                className="flex-[0.8] py-3 px-3 rounded-xl bg-zinc-800 border border-white/5 text-white font-bold hover:bg-zinc-700 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed shadow-md"
               >
                 {isLoading ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <Sliders className="w-4 h-4 text-orange-500 shrink-0" />
-                    <span className="tracking-wider uppercase text-[11px] font-black">Calibrer</span>
+                    <Sliders className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                    <span className="tracking-wider uppercase text-[10px] font-black">Calibrer</span>
                   </>
                 )}
               </button>
@@ -232,14 +232,14 @@ export default function PracticeMode({ bufferSeconds = 30, onBackToMenu }: Pract
               <button
                 onClick={handleViewSwing}
                 disabled={isLoading || elapsed < 1}
-                className="flex-1 py-4 px-4 rounded-2xl bg-orange-500 text-black font-extrabold shadow-[0_4px_20px_rgba(249,115,22,0.3)] hover:bg-orange-400 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex-1 py-3 px-3 rounded-xl bg-orange-500 text-black font-extrabold shadow-[0_4px_20px_rgba(249,115,22,0.3)] hover:bg-orange-400 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
-                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                  <div className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <Eye className="w-4 h-4 text-black shrink-0" />
-                    <span className="tracking-wider uppercase text-[11px] font-black">Voir mon swing</span>
+                    <Eye className="w-3.5 h-3.5 text-black shrink-0" />
+                    <span className="tracking-wider uppercase text-[10px] font-black">Voir mon swing</span>
                   </>
                 )}
               </button>
@@ -268,7 +268,7 @@ export default function PracticeMode({ bufferSeconds = 30, onBackToMenu }: Pract
         />
       )}
 
-      {/* --- MODE ÉDITION / TRIMMER : Correction ici (on enlève le h-[100dvh] en trop) --- */}
+      {/* --- MODE ÉDITION / TRIMMER --- */}
       {!isLive && !isCalibrating && (
         <div className="flex-1 flex flex-col w-full h-full bg-black overflow-hidden">
           {recordedBlob ? (
