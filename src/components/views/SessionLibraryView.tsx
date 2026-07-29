@@ -8,7 +8,6 @@ interface SessionLibraryViewProps {
   videos: SessionVideo[];
   onClose: () => void;
   onClearSession?: () => void;
-  // On ajoute la fonction de suppression unitaire ici
   onDeleteVideo?: (id: number) => Promise<void>; 
 }
 
@@ -37,7 +36,7 @@ export default function SessionLibraryView({
   videos,
   onClose,
   onClearSession,
-  onDeleteVideo, // On récupère la fonction
+  onDeleteVideo,
 }: SessionLibraryViewProps) {
   const maxVideos = 15;
   const [playingVideo, setPlayingVideo] = useState<SessionVideo | null>(null);
@@ -86,21 +85,19 @@ export default function SessionLibraryView({
     URL.revokeObjectURL(url);
   };
 
-  // Nouvelle fonction pour la suppression unitaire
   const handleDeleteSingle = async () => {
     if (!playingVideo || !playingVideo.id || !onDeleteVideo) return;
     
     if (window.confirm("Voulez-vous vraiment supprimer cette vidéo ?")) {
       await onDeleteVideo(playingVideo.id);
-      setPlayingVideo(null); // On ferme le lecteur
+      setPlayingVideo(null);
     }
   };
-
 
   if (playingVideo) {
     const videoUrl = URL.createObjectURL(playingVideo.blob);
     return (
-      <div className="fixed inset-0 z-[60] bg-black flex flex-col w-screen h-screen text-white">
+      <div className="fixed inset-0 z-[60] bg-black flex flex-col w-screen h-[100dvh] text-white overflow-hidden">
         <div className="bg-black/90 backdrop-blur-xl px-4 py-4 flex items-center justify-between shrink-0 z-20">
           
           <button
@@ -135,7 +132,6 @@ export default function SessionLibraryView({
             </p>
           </div>
 
-          {/* AJOUT : Le bouton supprimer en haut à droite du lecteur */}
           <button
             onClick={handleDeleteSingle}
             className="w-10 h-10 bg-red-500/10 rounded-full flex items-center justify-center text-red-500 hover:bg-red-500/20 transition active:scale-95 cursor-pointer"
@@ -157,7 +153,7 @@ export default function SessionLibraryView({
           />
         </div>
 
-        <div className="bg-black/90 backdrop-blur-xl p-4 flex gap-3 shrink-0 z-25">
+        <div className="bg-black/90 backdrop-blur-xl p-4 flex gap-3 shrink-0 z-25 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <button
             onClick={handleShare}
             className="flex-1 bg-orange-500 text-black font-extrabold py-3.5 rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition shadow-lg uppercase text-xs tracking-wider cursor-pointer"
@@ -177,9 +173,10 @@ export default function SessionLibraryView({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black flex flex-col w-screen h-screen text-white overflow-y-auto selection:bg-orange-500 selection:text-black">
+    <div className="fixed inset-0 z-50 bg-black flex flex-col w-screen h-[100dvh] text-white overflow-hidden selection:bg-orange-500 selection:text-black">
       
-      <div className="sticky top-0 bg-black/80 backdrop-blur-xl px-6 py-4 flex items-center justify-between z-10">
+      {/* Header fixe */}
+      <div className="sticky top-0 bg-black/80 backdrop-blur-xl px-6 py-4 flex items-center justify-between shrink-0 z-10">
         <button onClick={onClose} className="w-10 h-10 bg-zinc-900 rounded-full flex items-center justify-center hover:bg-zinc-800 transition active:scale-95 cursor-pointer">
           <ArrowLeft className="w-5 h-5 text-white" />
         </button>
@@ -190,7 +187,8 @@ export default function SessionLibraryView({
         <div className="w-10" />
       </div>
 
-      <div className="flex-1 flex flex-col p-6 gap-6">
+      {/* Contenu scrollable de la grille */}
+      <div className="flex-1 w-full overflow-y-auto p-6 flex flex-col gap-6 pb-[calc(5rem+env(safe-area-inset-bottom))]">
         
         {videos.length > 0 && (
           <div className="bg-orange-500/10 border border-orange-500/20 px-4 py-3 rounded-2xl flex items-center gap-3 shrink-0">
@@ -222,21 +220,24 @@ export default function SessionLibraryView({
             ))}
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 text-center py-12">
+          <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 text-center py-12 my-auto">
             <div className="w-16 h-16 rounded-full bg-zinc-900 flex items-center justify-center mb-4 border border-white/5"><Film className="w-8 h-8 opacity-30 text-orange-500" /></div>
             <p className="text-sm font-bold text-zinc-300">Votre session est vide</p>
             <p className="text-xs mt-1.5 max-w-[260px] text-zinc-500 leading-relaxed">Lancez le mode Practice pour analyser et conserver temporairement vos plus beaux coups.</p>
           </div>
         )}
+
+        {/* Bouton vider la session placé à l'intérieur de la zone scrollable pour ne pas être masqué */}
+        {videos.length > 0 && (
+          <div className="mt-4 pt-2">
+            <button onClick={onClearSession} className="w-full py-4 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold flex items-center justify-center gap-2 active:scale-95 transition text-xs cursor-pointer border border-red-500/20">
+              <Trash2 className="w-4 h-4" /> <span>Vider la session (Fin d'entraînement)</span>
+            </button>
+          </div>
+        )}
+
       </div>
 
-      {videos.length > 0 && (
-        <div className="p-6 pt-0 mt-auto">
-          <button onClick={onClearSession} className="w-full py-4 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold flex items-center justify-center gap-2 active:scale-95 transition text-xs cursor-pointer">
-            <Trash2 className="w-4 h-4" /> <span>Vider la session (Fin d'entraînement)</span>
-          </button>
-        </div>
-      )}
     </div>
   );
 }

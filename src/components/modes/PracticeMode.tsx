@@ -4,7 +4,6 @@ import React, { useRef, useState, useEffect } from 'react';
 import { CameraEngine, CameraEngineHandle } from '@/components/camera/CameraEngine';
 import VideoTrimmer from '@/components/video/VideoTrimmer';
 import CalibrationMode, { Shape } from '@/components/modes/CalibrationMode';
-// AJOUT DES ICÔNES : SwitchCamera et Grid
 import { Eye, X, RefreshCw, Sliders, Radio, SwitchCamera, Grid } from 'lucide-react';
 
 interface PracticeModeProps {
@@ -21,16 +20,13 @@ export default function PracticeMode({ bufferSeconds = 30, onBackToMenu }: Pract
   
   const [elapsed, setElapsed] = useState(0);
 
-  // --- NOUVEAUX ÉTATS POUR LES QUICK WINS ---
   const [showGrid, setShowGrid] = useState(false);
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
 
-  // Gestion du mode Calibration
   const [isCalibrating, setIsCalibrating] = useState(false);
   const [calibrationBlob, setCalibrationBlob] = useState<Blob | null>(null);
   const [savedShapes, setSavedShapes] = useState<Shape[]>([]);
 
-  // Animation de la barre de progression
   useEffect(() => {
     if (!isLive || isCalibrating) return;
     
@@ -80,7 +76,8 @@ export default function PracticeMode({ bufferSeconds = 30, onBackToMenu }: Pract
   const progressPercentage = Math.min((elapsed / bufferSeconds) * 100, 100);
 
   return (
-    <div className="flex flex-col w-full h-full bg-black select-none overflow-hidden">
+    // MODIFICATION ICI : h-[100dvh] au lieu de h-full pour verrouiller la hauteur exacte de l'écran mobile
+    <div className="flex flex-col w-full h-[100dvh] bg-black select-none overflow-hidden">
       
       {/* --- MODE DIRECT --- */}
       {isLive && !isCalibrating && (
@@ -88,10 +85,8 @@ export default function PracticeMode({ bufferSeconds = 30, onBackToMenu }: Pract
           {/* 1. ZONE VIDÉO DÉDIÉE (PREND TOUT L'ESPACE RESTANT) */}
           <div className="relative flex-1 min-h-0 w-full bg-zinc-950 flex items-center justify-center">
             
-            {/* Flux Caméra (On lui passe la prop facingMode) */}
             <CameraEngine key={liveKey} ref={cameraRef} bufferSeconds={bufferSeconds} facingMode={facingMode} />
             
-            {/* NOUVEAU : LA GRILLE D'ALIGNEMENT */}
             {showGrid && (
               <div className="absolute inset-0 w-full h-full pointer-events-none z-10">
                 <div className="absolute top-1/3 left-0 w-full h-[1px] bg-white/30" />
@@ -101,7 +96,6 @@ export default function PracticeMode({ bufferSeconds = 30, onBackToMenu }: Pract
               </div>
             )}
 
-            {/* Calque des repères SVG / HTML */}
             <div className="absolute inset-0 w-full h-full z-20 pointer-events-none">
               <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible" xmlns="http://www.w3.org/2000/svg">
                 {savedShapes.map((shape) => {
@@ -142,7 +136,6 @@ export default function PracticeMode({ bufferSeconds = 30, onBackToMenu }: Pract
               })}
             </div>
 
-            {/* BOUTONS FLOTTANTS (Fermer, Flip Caméra, Grille) */}
             <div className="absolute top-4 right-4 z-30 pointer-events-auto flex flex-col gap-3">
               {onBackToMenu && (
                 <button
@@ -172,11 +165,11 @@ export default function PracticeMode({ bufferSeconds = 30, onBackToMenu }: Pract
             </div>
           </div>
 
-          {/* 2. PANNEAU DE CONTRÔLE INFÉRIEUR (Taille fixe 340px) */}
-          <div className="w-full h-[340px] bg-zinc-900 border-t border-white/10 p-5 shrink-0 flex flex-col justify-between shadow-2xl">
+          {/* 2. PANNEAU DE CONTRÔLE INFÉRIEUR + SAFE AREA POUR LA BARRE ANDROID */}
+          <div className="w-full bg-zinc-900 border-t border-white/10 p-5 shrink-0 flex flex-col justify-between shadow-2xl pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
             
             {/* Statut Enregistrement */}
-            <div className="flex items-center justify-between bg-black/40 p-3.5 rounded-2xl border border-white/5">
+            <div className="flex items-center justify-between bg-black/40 p-3.5 rounded-2xl border border-white/5 mb-3">
               <div className="flex items-center gap-3">
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500/10">
                   <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
@@ -191,7 +184,7 @@ export default function PracticeMode({ bufferSeconds = 30, onBackToMenu }: Pract
             </div>
 
             {/* Jauge de la Mémoire Tampon */}
-            <div className="flex flex-col gap-3 bg-zinc-950 p-4 rounded-2xl border border-white/5">
+            <div className="flex flex-col gap-3 bg-zinc-950 p-4 rounded-2xl border border-white/5 mb-3">
               <div className="flex justify-between items-end px-1">
                 <span className="text-[11px] font-bold text-zinc-300 uppercase tracking-wider">Mémoire Tampon</span>
                 <span className={`text-sm font-mono font-bold ${isBufferFull ? 'text-orange-500' : 'text-zinc-400'}`}>
@@ -277,7 +270,7 @@ export default function PracticeMode({ bufferSeconds = 30, onBackToMenu }: Pract
 
       {/* --- MODE ÉDITION / TRIMMER --- */}
       {!isLive && !isCalibrating && (
-        <div className="flex-1 flex flex-col w-full h-full bg-black">
+        <div className="flex-1 flex flex-col w-full h-[100dvh] bg-black">
           {recordedBlob ? (
             <VideoTrimmer 
               videoBlob={recordedBlob} 

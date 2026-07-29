@@ -57,13 +57,12 @@ export function TeeziView() {
   const handleDeleteSingleVideo = async (id: number) => {
     try {
       await deleteVideoFromSession(id);
-      await loadVideos(); // On rafraîchit la liste des vidéos
+      await loadVideos();
     } catch (error) {
       console.error("Erreur lors de la suppression de la vidéo :", error);
     }
   };
 
-  // NOUVELLE FONCTION : Bloque l'ouverture si on est à 15 vidéos
   const handleOpenPractice = () => {
     if (sessionVideos.length >= 15) {
       alert("Mémoire pleine (15/15) ⚠️\nVeuillez supprimer des vidéos dans la section 'Vidéos en cours' avant de relancer le Practice.");
@@ -74,8 +73,8 @@ export function TeeziView() {
 
   if (isPracticeOpen) {
     return (
-      <div className="fixed inset-0 z-50 bg-black flex flex-col w-screen h-screen">
-        <div className="flex-1 w-full h-full">
+      <div className="fixed inset-0 z-50 bg-black flex flex-col w-screen h-[100dvh] overflow-hidden">
+        <div className="flex-1 w-full overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))]">
           <PracticeMode onBackToMenu={() => setIsPracticeOpen(false)} />
         </div>
       </div>
@@ -119,7 +118,6 @@ export function TeeziView() {
         </div>
 
         <div className="flex gap-4 overflow-x-auto pb-2 pt-1 snap-x snap-mandatory scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none]">
-          {/* CORRECTION ICI : On utilise handleOpenPractice */}
           <div onClick={handleOpenPractice} className="min-w-[240px] flex-1 snap-center p-5 rounded-2xl bg-zinc-900 border border-orange-500/50 shadow-[0_0_20px_rgba(249,115,22,0.1)] transition-all cursor-pointer flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-4">
@@ -158,7 +156,6 @@ export function TeeziView() {
           </button>
         </div>
 
-        {/* --- NOUVEAU : PETIT WARNING DISCRET DANS LE BLOC --- */}
         {sessionVideos.length > 0 && (
           <div className="bg-orange-500/10 border border-orange-500/20 px-3 py-2 rounded-xl flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-orange-500 shrink-0" />

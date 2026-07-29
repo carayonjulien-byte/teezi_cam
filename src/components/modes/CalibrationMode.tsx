@@ -79,7 +79,7 @@ export default function CalibrationMode({ videoBlob, bufferSeconds = 30, initial
       id: Date.now().toString(),
       type: 'circle',
       x: window.innerWidth / 2,
-      y: (window.innerHeight - 340) / 2, // Centré dans la zone vidéo
+      y: (window.innerHeight - 340) / 2,
       size: 80
     } : {
       id: Date.now().toString(),
@@ -159,12 +159,12 @@ export default function CalibrationMode({ videoBlob, bufferSeconds = 30, initial
 
   return (
     <div 
-      className="flex flex-col w-full h-full bg-black select-none touch-none overflow-hidden"
+      className="flex flex-col w-full h-[100dvh] bg-black select-none touch-none overflow-hidden"
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
     >
       
-      {/* 1. ZONE VIDÉO (Prend l'espace exact restant au-dessus du menu) */}
+      {/* 1. ZONE VIDÉO */}
       <div className="relative flex-1 min-h-0 w-full bg-zinc-950 flex items-center justify-center overflow-hidden z-0">
         {videoUrl ? (
           <video
@@ -173,7 +173,6 @@ export default function CalibrationMode({ videoBlob, bufferSeconds = 30, initial
             playsInline
             onLoadedMetadata={handleLoadedMetadata}
             onTimeUpdate={handleTimeUpdate}
-            /* object-cover exact comme le Live et l'Analyse */
             className="w-full h-full object-contain pointer-events-none"
           />
         ) : (
@@ -275,7 +274,6 @@ export default function CalibrationMode({ videoBlob, bufferSeconds = 30, initial
             }
           })}
 
-          {/* Indication visuelle si vide */}
           {shapes.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
               <p className="text-[11px] text-zinc-200 font-medium bg-black/70 backdrop-blur-sm px-4 py-2.5 rounded-2xl border border-white/10 shadow-lg">
@@ -286,10 +284,10 @@ export default function CalibrationMode({ videoBlob, bufferSeconds = 30, initial
         </div>
       </div>
 
-      {/* 2. MENU INFÉRIEUR FIXE (h-[340px] exact, comme l'analyse) */}
-      <div className="w-full h-[340px] bg-zinc-900 border-t border-white/10 p-5 shrink-0 flex flex-col justify-between shadow-2xl pointer-events-auto">
+      {/* 2. MENU INFÉRIEUR FIXE + SAFE AREA POUR LA BARRE ANDROID */}
+      <div className="w-full bg-zinc-900 border-t border-white/10 p-5 shrink-0 flex flex-col justify-between shadow-2xl pointer-events-auto pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
         
-        {/* EN-TÊTE DU MENU (Titre + Bouton Fermer déplacé ici) */}
+        {/* EN-TÊTE DU MENU */}
         <div className="flex items-center justify-between pb-3 border-b border-white/5">
           <h3 className="text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2">
             <Sliders className="w-4 h-4 text-orange-500" />
@@ -361,7 +359,7 @@ export default function CalibrationMode({ videoBlob, bufferSeconds = 30, initial
             )}
           </div>
 
-          {/* Option de suppression individuelle (Taille fixe pour éviter les sauts) */}
+          {/* Option de suppression individuelle */}
           <div className="h-10">
             {selectedShape ? (
               <div className="h-full flex items-center justify-between bg-zinc-950/60 px-3 py-1.5 rounded-xl border border-orange-500/30">
@@ -388,7 +386,7 @@ export default function CalibrationMode({ videoBlob, bufferSeconds = 30, initial
         {/* BOUTON VALIDER */}
         <button
           onClick={() => onSave(shapes)}
-          className="w-full py-3.5 rounded-2xl bg-orange-500 text-black font-extrabold text-xs shadow-[0_4px_20px_rgba(249,115,22,0.3)] hover:bg-orange-400 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+          className="w-full py-3.5 rounded-2xl bg-orange-500 text-black font-extrabold text-xs shadow-[0_4px_20px_rgba(249,115,22,0.3)] hover:bg-orange-400 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 mt-2"
         >
           <Check className="w-4 h-4 stroke-[3]" /> Enregistrer les repères
         </button>

@@ -20,7 +20,6 @@ export function VideoExporter({ videoBlob, onClose }: VideoExporterProps) {
     setIsExporting(true);
 
     try {
-      // Création d'une URL vidéo pour lecture interne Canvas
       const videoUrl = URL.createObjectURL(videoBlob);
       const video = document.createElement('video');
       video.src = videoUrl;
@@ -41,7 +40,6 @@ export function VideoExporter({ videoBlob, onClose }: VideoExporterProps) {
 
       if (!ctx) throw new Error("Canvas context non disponible");
 
-      // Capture du flux Canvas en Stream Vidéo
       const stream = canvas.captureStream(30);
       const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
       const chunks: Blob[] = [];
@@ -53,7 +51,6 @@ export function VideoExporter({ videoBlob, onClose }: VideoExporterProps) {
           const finalBlob = new Blob(chunks, { type: 'video/webm' });
           const url = URL.createObjectURL(finalBlob);
           
-          // Déclenchement du téléchargement automatique
           const a = document.createElement('a');
           a.href = url;
           a.download = `TEEZI_${selectedClub}_${Date.now()}.webm`;
@@ -66,7 +63,6 @@ export function VideoExporter({ videoBlob, onClose }: VideoExporterProps) {
 
       mediaRecorder.start();
 
-      // Dessin trame par trame de la vidéo + l'incrustation texte du carnet de sensations
       const drawFrame = () => {
         if (video.ended || video.paused) {
           mediaRecorder.stop();
@@ -75,7 +71,6 @@ export function VideoExporter({ videoBlob, onClose }: VideoExporterProps) {
 
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        // Dessin du bloc habillage (Incrustation style TV / Carnet de sensations)
         ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
         ctx.roundRect 
           ? ctx.roundRect(40, canvas.height - 220, canvas.width - 80, 140, 20)
@@ -86,19 +81,16 @@ export function VideoExporter({ videoBlob, onClose }: VideoExporterProps) {
         ctx.lineWidth = 3;
         ctx.stroke();
 
-        // Texte : Club & Date
-        ctx.fillStyle = '#FACC15'; // Jaune ambre OLED
+        ctx.fillStyle = '#FACC15';
         ctx.font = 'bold 36px sans-serif';
         ctx.fillText(`🏌️ ${selectedClub.toUpperCase()}`, 70, canvas.height - 160);
 
-        // Texte : Note de sensation saisie
         if (sensationNote) {
           ctx.fillStyle = '#FFFFFF';
           ctx.font = '28px sans-serif';
           ctx.fillText(`"${sensationNote}"`, 70, canvas.height - 110);
         }
 
-        // Branding discret
         ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
         ctx.font = '20px monospace';
         ctx.fillText('TEEZI Cam • Mode Practice', 70, canvas.height - 65);
@@ -119,13 +111,14 @@ export function VideoExporter({ videoBlob, onClose }: VideoExporterProps) {
   };
 
   return (
-    <div className="absolute inset-x-4 bottom-24 bg-zinc-900/95 backdrop-blur-xl border border-zinc-800 rounded-3xl p-5 text-white shadow-2xl z-50 space-y-4 animate-fadeIn">
+    // Ajout de max-h-[85vh], overflow-y-auto et de la gestion de la zone de sécurité (safe-area) en bas
+    <div className="absolute inset-x-4 bottom-6 max-h-[85vh] overflow-y-auto bg-zinc-900/95 backdrop-blur-xl border border-zinc-800 rounded-3xl p-5 text-white shadow-2xl z-50 space-y-4 animate-fadeIn pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-bold tracking-wide uppercase flex items-center gap-2 text-amber-400">
           <Tag className="w-4 h-4" />
           Enregistrer & Incruster le swing
         </h3>
-        <button onClick={onClose} className="text-xs text-zinc-400 hover:text-white">
+        <button onClick={onClose} className="text-xs text-zinc-400 hover:text-white cursor-pointer p-1">
           ✕ Fermer
         </button>
       </div>

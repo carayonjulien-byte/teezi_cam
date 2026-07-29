@@ -148,8 +148,6 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
   const handlePointerUp = () => setDraggingInfo(null);
   const selectedShape = localShapes.find(s => s.id === selectedId);
 
-
-// --- EXPORT CORRIGÉ (Avec fusion de l'audio !) ---
   const handleExportTrimmedVideo = async () => {
     setIsExporting(true);
     try {
@@ -160,7 +158,6 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
 
       const video = document.createElement('video');
       video.src = videoUrl;
-      // ATTENTION : On doit démuter la vidéo pour que le mixeur virtuel puisse entendre le son !
       video.muted = false; 
       video.playsInline = true;
 
@@ -187,12 +184,8 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
       const mapY = (y: number) => (y - rect.top - offsetY) / scale;
       const mapSize = (size: number) => size / scale;
 
-      // 1. On capture l'image du canvas
       const stream = canvas.captureStream(60);
 
-      // ==========================================
-      // 2. LE MIXEUR AUDIO : On récupère le son de la vidéo
-      // ==========================================
       let audioCtx: AudioContext | null = null;
       try {
         const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
@@ -200,10 +193,8 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
           audioCtx = new AudioContextClass();
           const source = audioCtx.createMediaElementSource(video);
           const dest = audioCtx.createMediaStreamDestination();
-          // On connecte la source à la destination d'enregistrement (ça la rend silencieuse pour l'utilisateur)
           source.connect(dest); 
           
-          // On ajoute la piste son à notre flux vidéo !
           const audioTracks = dest.stream.getAudioTracks();
           if (audioTracks.length > 0) {
             stream.addTrack(audioTracks[0]);
@@ -212,7 +203,6 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
       } catch (e) {
         console.warn("Impossible d'extraire l'audio :", e);
       }
-      // ==========================================
 
       const mediaRecorder = new MediaRecorder(stream, { 
         mimeType: 'video/webm; codecs=vp9',
@@ -223,7 +213,6 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
       
       const exportPromise = new Promise((resolve) => {
         mediaRecorder.onstop = async () => {
-          // On ferme le mixeur audio pour libérer la mémoire du téléphone
           if (audioCtx) {
             audioCtx.close().catch(console.error);
           }
@@ -231,17 +220,15 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
           const finalBlob = new Blob(chunks, { type: 'video/webm' });
           
           try {
-            // 1. ON VÉRIFIE LA LIMITE AVANT DE SAUVEGARDER
             const currentCount = await getVideoCount();
             
             if (currentCount >= 15) {
               alert("Mémoire pleine (15/15) ⚠️\nImpossible d'enregistrer plus de vidéos. Retour à l'accueil pour faire du tri.");
-              window.location.href = '/app'; // Redirige vers l'accueil
+              window.location.href = '/app';
               resolve(false);
-              return; // On stoppe la sauvegarde
+              return;
             }
 
-            // 2. LA PLACE EST LIBRE, ON SAUVEGARDE
             const timeString = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
             await saveVideoToSession({
               blob: finalBlob,
@@ -251,10 +238,9 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
               duration: `${Math.max(0, endTime - startTime).toFixed(1)}s`
             });
             
-            // 3. ON PRÉVIENT SI C'ÉTAIT LA TOUTE DERNIÈRE PLACE (La 15ème)
             if (currentCount + 1 === 15) {
               alert("Vidéo sauvegardée ! ✅\nAttention, votre mémoire est maintenant pleine (15/15). Vous allez être redirigé vers l'accueil.");
-              window.location.href = '/app'; // Redirige vers l'accueil après la sauvegarde de la 15ème
+              window.location.href = '/app';
               resolve(true);
               return;
             }
@@ -279,7 +265,6 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
 
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        // ... LIGNES DE CODE DES DESSINS IDENTIQUES ...
         if (showGrid) {
           ctx.save();
           ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
@@ -337,8 +322,9 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
   };
 
   return (
+    // MODIFICATION ICI : h-[100dvh] à la place de h-full
     <div 
-      className="flex flex-col w-full h-full bg-black select-none overflow-hidden touch-none"
+      className="flex flex-col w-full h-[100dvh] bg-black select-none overflow-hidden touch-none"
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
     >
@@ -428,8 +414,9 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
         </div>
       </div>
 
-      <div className="w-full h-[340px] bg-zinc-900 border-t border-white/10 p-4 shrink-0 flex flex-col justify-between shadow-2xl">
-        <div className="flex bg-zinc-950 p-1.5 rounded-2xl border border-white/5 gap-1">
+      {/* PANNEAU INFÉRIEUR + SAFE AREA POUR LA BARRE ANDROID */}
+      <div className="w-full bg-zinc-900 border-t border-white/10 p-4 shrink-0 flex flex-col justify-between shadow-2xl pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
+        <div className="flex bg-zinc-950 p-1.5 rounded-2xl border border-white/5 gap-1 mb-2">
           <button onClick={() => setActiveTab('video')} className={`flex-1 py-2 rounded-xl text-[11px] font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${activeTab === 'video' ? 'bg-orange-500 text-black shadow-sm' : 'text-zinc-400 hover:text-white'}`}>
             <Scissors className="w-3.5 h-3.5" /> Vidéo
           </button>
@@ -541,7 +528,7 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
 
         </div>
 
-        <button onClick={handleExportTrimmedVideo} disabled={isExporting} className="w-full py-3.5 rounded-2xl bg-orange-500 text-black font-extrabold text-xs shadow-[0_4px_20px_rgba(249,115,22,0.3)] hover:bg-orange-400 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-95">
+        <button onClick={handleExportTrimmedVideo} disabled={isExporting} className="w-full py-3.5 rounded-2xl bg-orange-500 text-black font-extrabold text-xs shadow-[0_4px_20px_rgba(249,115,22,0.3)] hover:bg-orange-400 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-95 mt-2">
           {isExporting ? (
             <><div className="w-4 h-4 border-2 border-black border-t-transparent uppercase rounded-full animate-spin" /><span className="uppercase tracking-widest">Sauvegarde</span></>
           ) : success ? (
