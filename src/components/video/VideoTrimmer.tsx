@@ -10,9 +10,10 @@ interface VideoTrimmerProps {
   defaultTrimSeconds?: number;
   onBackToLive: () => void;
   savedShapes?: Shape[];
+  facingMode?: 'environment' | 'user'; // AJOUT : Gestion de la caméra frontale
 }
 
-export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBackToLive, savedShapes = [] }: VideoTrimmerProps) {
+export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBackToLive, savedShapes = [], facingMode = 'environment' }: VideoTrimmerProps) {
   const [localShapes, setLocalShapes] = useState<Shape[]>(savedShapes);
   const [showShapes, setShowShapes] = useState(true);
   const [showGrid, setShowGrid] = useState(false);
@@ -263,7 +264,19 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
           return;
         }
 
+        ctx.save();
+        
+        // AJOUT : Si caméra frontale, on retourne le Canvas pour que l'export soit cohérent
+        if (facingMode === 'user') {
+          ctx.translate(canvas.width, 0);
+          ctx.scale(-1, 1);
+        }
+        
+        // On dessine l'image brute (qui se retourne automatiquement grâce au scale(-1))
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // On remet le contexte normal pour dessiner les SVG à l'endroit !
+        ctx.restore();
 
         if (showGrid) {
           ctx.save();
@@ -322,7 +335,6 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
   };
 
   return (
-    // MODIFICATION ICI : h-[100dvh] à la place de h-full
     <div 
       className="flex flex-col w-full h-[100dvh] bg-black select-none overflow-hidden touch-none"
       onPointerMove={handlePointerMove}
@@ -347,7 +359,8 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
             onTimeUpdate={handleTimeUpdate}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
-            className="w-full h-full object-contain pointer-events-none"
+            /* AJOUT : Effet miroir sur la vidéo frontale */
+            className={`w-full h-full object-contain pointer-events-none ${facingMode === 'user' ? '-scale-x-100' : ''}`}
           />
         ) : (
           <div className="flex flex-col items-center justify-center w-full h-full text-zinc-500 text-xs gap-2">
@@ -414,76 +427,93 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
         </div>
       </div>
 
-      {/* PANNEAU INFÉRIEUR + SAFE AREA POUR LA BARRE ANDROID */}
-      <div className="w-full bg-zinc-900 border-t border-white/10 p-4 shrink-0 flex flex-col justify-between shadow-2xl pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
-        <div className="flex bg-zinc-950 p-1.5 rounded-2xl border border-white/5 gap-1 mb-2">
-          <button onClick={() => setActiveTab('video')} className={`flex-1 py-2 rounded-xl text-[11px] font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${activeTab === 'video' ? 'bg-orange-500 text-black shadow-sm' : 'text-zinc-400 hover:text-white'}`}>
+      {/* HAUTEUR À 320px : La place parfaite pour tout afficher SANS scroll */}
+      <div className="w-full h-[320px] bg-zinc-900 border-t border-white/10 p-4 shrink-0 flex flex-col justify-between shadow-2xl pb-[calc(1rem+env(safe-area-inset-bottom))] z-50 overflow-hidden">
+        
+        {/* Les Onglets */}
+        <div className="flex bg-zinc-950 p-1.5 rounded-xl border border-white/5 gap-1 mb-3 shrink-0">
+          <button onClick={() => setActiveTab('video')} className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${activeTab === 'video' ? 'bg-orange-500 text-black shadow-sm' : 'text-zinc-400 hover:text-white'}`}>
             <Scissors className="w-3.5 h-3.5" /> Vidéo
           </button>
-          <button onClick={() => setActiveTab('draw')} className={`flex-1 py-2 rounded-xl text-[11px] font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${activeTab === 'draw' ? 'bg-orange-500 text-black shadow-sm' : 'text-zinc-400 hover:text-white'}`}>
+          <button onClick={() => setActiveTab('draw')} className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${activeTab === 'draw' ? 'bg-orange-500 text-black shadow-sm' : 'text-zinc-400 hover:text-white'}`}>
             <Pencil className="w-3.5 h-3.5" /> Dessin
           </button>
-          <button onClick={() => setActiveTab('notes')} className={`flex-1 py-2 rounded-xl text-[11px] font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${activeTab === 'notes' ? 'bg-orange-500 text-black shadow-sm' : 'text-zinc-400 hover:text-white'}`}>
+          <button onClick={() => setActiveTab('notes')} className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${activeTab === 'notes' ? 'bg-orange-500 text-black shadow-sm' : 'text-zinc-400 hover:text-white'}`}>
             <FileText className="w-3.5 h-3.5" /> Notes
           </button>
         </div>
 
-        <div className="h-[175px] flex flex-col justify-center">
+        {/* ZONE CENTRALE : flex-1, sans aucun scroll ! */}
+        <div className="flex-1 flex flex-col justify-between min-h-0 pb-3">
+          
           {activeTab === 'video' && (
-            <div className="space-y-3 animate-fadeIn">
-              <div className="flex items-center justify-between pb-2 border-b border-white/5">
+            <div className="flex flex-col h-full justify-between animate-fadeIn">
+              
+              {/* Ligne Lecture / Vitesse */}
+              <div className="flex items-center justify-between pb-2 border-b border-white/5 shrink-0">
                 <div className="flex items-center gap-2">
-                  <button onClick={togglePlayPause} className="w-8 h-8 rounded-xl bg-orange-500 text-black flex items-center justify-center hover:bg-orange-400 transition cursor-pointer shadow-md">
-                    {isPlaying ? <Pause className="w-4 h-4 fill-black" /> : <Play className="w-4 h-4 fill-black ml-0.5" />}
+                  <button onClick={togglePlayPause} className="w-7 h-7 rounded-lg bg-orange-500 text-black flex items-center justify-center hover:bg-orange-400 transition cursor-pointer shadow-md">
+                    {isPlaying ? <Pause className="w-3.5 h-3.5 fill-black" /> : <Play className="w-3.5 h-3.5 fill-black ml-0.5" />}
                   </button>
-                  <span className="text-xs font-medium text-zinc-300 ml-1">{isPlaying ? 'Lecture' : 'Pause'}</span>
+                  <span className="text-[11px] font-medium text-zinc-300 ml-1">{isPlaying ? 'Lecture' : 'Pause'}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Gauge className="w-3.5 h-3.5 text-zinc-400 mr-1" />
+                  <Gauge className="w-3 h-3 text-zinc-400 mr-1" />
                   {[0.5, 0.75, 1.0, 1.5].map((rate) => (
-                    <button key={rate} onClick={() => changeSpeed(rate)} className={`px-2 py-1.5 rounded-lg text-[11px] font-mono font-bold transition cursor-pointer ${playbackRate === rate ? 'bg-orange-500 text-black shadow-sm' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}>
+                    <button key={rate} onClick={() => changeSpeed(rate)} className={`px-2 py-1 rounded-md text-[10px] font-mono font-bold transition cursor-pointer ${playbackRate === rate ? 'bg-orange-500 text-black shadow-sm' : 'bg-zinc-800 text-zinc-400 hover:text-white'}`}>
                       {rate}x
                     </button>
                   ))}
                 </div>
               </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2"><Scissors className="w-4 h-4 text-orange-500" /> Isoler le swing</h3>
-                  <span className="text-[10px] font-mono text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-md">Durée : {Math.max(0, endTime - startTime).toFixed(1)}s</span>
-                </div>
-                {duration > 0 && (
-                  <div className="grid grid-cols-2 gap-3 pt-1">
-                    <div className="bg-zinc-950/60 p-2.5 rounded-2xl border border-white/5 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-zinc-300 uppercase tracking-wider">Début</span>
-                        <span className="text-xs font-mono text-orange-400 font-bold">{startTime.toFixed(1)}s</span>
-                      </div>
-                      <input type="range" min={0} max={duration - 0.5} step={0.1} value={startTime} onChange={(e) => { const val = parseFloat(e.target.value); if (val < endTime) { setStartTime(val); if (videoRef.current) { videoRef.current.pause(); setIsPlaying(false); videoRef.current.currentTime = val + offset; } } }} className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-orange-500" />
-                      <div className="flex justify-between gap-2">
-                        <button onClick={() => { const val = Math.max(0, startTime - 0.2); setStartTime(val); if (videoRef.current) { videoRef.current.pause(); setIsPlaying(false); videoRef.current.currentTime = val + offset; } }} className="flex-1 bg-zinc-900 hover:bg-zinc-800 active:scale-95 py-1.5 rounded-xl text-xs font-mono text-orange-400 font-bold flex items-center justify-center gap-1 border border-white/5 cursor-pointer shadow-sm"><Minus className="w-3 h-3" /> 0.2s</button>
-                        <button onClick={() => { const val = Math.min(endTime - 0.5, startTime + 0.2); setStartTime(val); if (videoRef.current) { videoRef.current.pause(); setIsPlaying(false); videoRef.current.currentTime = val + offset; } }} className="flex-1 bg-zinc-900 hover:bg-zinc-800 active:scale-95 py-1.5 rounded-xl text-xs font-mono text-orange-400 font-bold flex items-center justify-center gap-1 border border-white/5 cursor-pointer shadow-sm"><Plus className="w-3 h-3" /> 0.2s</button>
-                      </div>
+
+              {/* LIGNE RESTAURÉE : Titre et durée */}
+              <div className="flex items-center justify-between mt-2 shrink-0">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                  <Scissors className="w-4 h-4 text-orange-500" /> Isoler le swing
+                </h3>
+                <span className="text-[10px] font-mono text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-md">
+                  Durée : {Math.max(0, endTime - startTime).toFixed(1)}s
+                </span>
+              </div>
+
+              {/* TIMELINE : Espacée correctement */}
+              {duration > 0 && (
+                <div className="grid grid-cols-2 gap-3 mt-2 flex-1 min-h-0">
+                  <div className="bg-zinc-950/60 p-2.5 rounded-xl border border-white/5 flex flex-col justify-between h-full">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Début</span>
+                      <span className="text-[11px] font-mono text-orange-400 font-bold">{startTime.toFixed(1)}s</span>
                     </div>
-                    <div className="bg-zinc-950/60 p-2.5 rounded-2xl border border-white/5 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-zinc-300 uppercase tracking-wider">Fin</span>
-                        <span className="text-xs font-mono text-orange-400 font-bold">{endTime.toFixed(1)}s</span>
-                      </div>
-                      <input type="range" min={0.5} max={duration} step={0.1} value={endTime} onChange={(e) => { const val = parseFloat(e.target.value); if (val > startTime) { setEndTime(val); if (videoRef.current) { videoRef.current.pause(); setIsPlaying(false); videoRef.current.currentTime = val + offset; } } }} className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-orange-500" />
-                      <div className="flex justify-between gap-2">
-                        <button onClick={() => { const val = Math.max(startTime + 0.5, endTime - 0.2); setEndTime(val); if (videoRef.current) { videoRef.current.pause(); setIsPlaying(false); videoRef.current.currentTime = val + offset; } }} className="flex-1 bg-zinc-900 hover:bg-zinc-800 active:scale-95 py-1.5 rounded-xl text-xs font-mono text-orange-400 font-bold flex items-center justify-center gap-1 border border-white/5 cursor-pointer shadow-sm"><Minus className="w-3 h-3" /> 0.2s</button>
-                        <button onClick={() => { const val = Math.min(duration, endTime + 0.2); setEndTime(val); if (videoRef.current) { videoRef.current.pause(); setIsPlaying(false); videoRef.current.currentTime = val + offset; } }} className="flex-1 bg-zinc-900 hover:bg-zinc-800 active:scale-95 py-1.5 rounded-xl text-xs font-mono text-orange-400 font-bold flex items-center justify-center gap-1 border border-white/5 cursor-pointer shadow-sm"><Plus className="w-3 h-3" /> 0.2s</button>
-                      </div>
+                    <div className="py-1">
+                      <input type="range" min={0} max={duration - 0.5} step={0.1} value={startTime} onChange={(e) => { const val = parseFloat(e.target.value); if (val < endTime) { setStartTime(val); if (videoRef.current) { videoRef.current.pause(); setIsPlaying(false); videoRef.current.currentTime = val + offset; } } }} className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-orange-500" />
+                    </div>
+                    <div className="flex justify-between gap-2 mt-auto">
+                      <button onClick={() => { const val = Math.max(0, startTime - 0.2); setStartTime(val); if (videoRef.current) { videoRef.current.pause(); setIsPlaying(false); videoRef.current.currentTime = val + offset; } }} className="flex-1 bg-zinc-900 hover:bg-zinc-800 active:scale-95 py-1.5 rounded-lg text-[11px] font-mono text-orange-400 font-bold flex items-center justify-center gap-1 border border-white/5 cursor-pointer shadow-sm"><Minus className="w-3 h-3" /> 0.2s</button>
+                      <button onClick={() => { const val = Math.min(endTime - 0.5, startTime + 0.2); setStartTime(val); if (videoRef.current) { videoRef.current.pause(); setIsPlaying(false); videoRef.current.currentTime = val + offset; } }} className="flex-1 bg-zinc-900 hover:bg-zinc-800 active:scale-95 py-1.5 rounded-lg text-[11px] font-mono text-orange-400 font-bold flex items-center justify-center gap-1 border border-white/5 cursor-pointer shadow-sm"><Plus className="w-3 h-3" /> 0.2s</button>
                     </div>
                   </div>
-                )}
-              </div>
+
+                  <div className="bg-zinc-950/60 p-2.5 rounded-xl border border-white/5 flex flex-col justify-between h-full">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Fin</span>
+                      <span className="text-[11px] font-mono text-orange-400 font-bold">{endTime.toFixed(1)}s</span>
+                    </div>
+                    <div className="py-1">
+                      <input type="range" min={0.5} max={duration} step={0.1} value={endTime} onChange={(e) => { const val = parseFloat(e.target.value); if (val > startTime) { setEndTime(val); if (videoRef.current) { videoRef.current.pause(); setIsPlaying(false); videoRef.current.currentTime = val + offset; } } }} className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-orange-500" />
+                    </div>
+                    <div className="flex justify-between gap-2 mt-auto">
+                      <button onClick={() => { const val = Math.max(startTime + 0.5, endTime - 0.2); setEndTime(val); if (videoRef.current) { videoRef.current.pause(); setIsPlaying(false); videoRef.current.currentTime = val + offset; } }} className="flex-1 bg-zinc-900 hover:bg-zinc-800 active:scale-95 py-1.5 rounded-lg text-[11px] font-mono text-orange-400 font-bold flex items-center justify-center gap-1 border border-white/5 cursor-pointer shadow-sm"><Minus className="w-3 h-3" /> 0.2s</button>
+                      <button onClick={() => { const val = Math.min(duration, endTime + 0.2); setEndTime(val); if (videoRef.current) { videoRef.current.pause(); setIsPlaying(false); videoRef.current.currentTime = val + offset; } }} className="flex-1 bg-zinc-900 hover:bg-zinc-800 active:scale-95 py-1.5 rounded-lg text-[11px] font-mono text-orange-400 font-bold flex items-center justify-center gap-1 border border-white/5 cursor-pointer shadow-sm"><Plus className="w-3 h-3" /> 0.2s</button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           {activeTab === 'draw' && (
-            <div className="space-y-4 animate-fadeIn">
+            <div className="space-y-4 animate-fadeIn h-full flex flex-col justify-center">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-orange-500 flex items-center gap-2"><Pencil className="w-4 h-4"/> Dessin Libre</span>
                 {localShapes.length > 0 && (
@@ -491,8 +521,8 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
                 )}
               </div>
               <div className="flex gap-2">
-                <button onClick={() => handleAddShape('circle')} className="flex-1 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold flex items-center justify-center gap-2 border border-white/5 active:scale-95 shadow-sm cursor-pointer"><Circle className="w-4 h-4 text-orange-500" /> Ajouter un Rond</button>
-                <button onClick={() => handleAddShape('line')} className="flex-1 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold flex items-center justify-center gap-2 border border-white/5 active:scale-95 shadow-sm cursor-pointer"><Minus className="w-4 h-4 text-orange-500" /> Ajouter une Ligne</button>
+                <button onClick={() => handleAddShape('circle')} className="flex-1 py-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold flex items-center justify-center gap-2 border border-white/5 active:scale-95 shadow-sm cursor-pointer"><Circle className="w-4 h-4 text-orange-500" /> + Rond</button>
+                <button onClick={() => handleAddShape('line')} className="flex-1 py-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold flex items-center justify-center gap-2 border border-white/5 active:scale-95 shadow-sm cursor-pointer"><Minus className="w-4 h-4 text-orange-500" /> + Ligne</button>
               </div>
               <div className="h-10">
                 {selectedShape ? (
@@ -501,14 +531,16 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
                     <button onClick={() => { setLocalShapes(localShapes.filter(s => s.id !== selectedShape.id)); setSelectedId(null); }} className="px-2 py-1 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/25 transition cursor-pointer flex items-center gap-1 text-xs font-bold"><Trash2 className="w-3.5 h-3.5" /> Supprimer</button>
                   </div>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-[10px] font-medium text-zinc-500 uppercase tracking-wider border border-dashed border-white/5 rounded-xl">Sélectionnez un repère pour le modifier</div>
+                  <div className="h-full flex items-center justify-center text-[10px] font-medium text-zinc-500 uppercase tracking-wider border border-dashed border-white/5 rounded-xl px-4">
+                    <span>Sélectionnez un repère pour modifier</span>
+                  </div>
                 )}
               </div>
             </div>
           )}
 
           {activeTab === 'notes' && (
-            <div className="space-y-3.5 animate-fadeIn">
+            <div className="space-y-4 animate-fadeIn h-full flex flex-col justify-center">
               <div className="flex items-center justify-between text-xs text-zinc-400 px-1">
                 <span className="font-bold uppercase tracking-wider text-white text-xs">Mémos de session</span>
                 <span className="font-mono flex items-center gap-1.5 text-xs bg-zinc-800 px-2.5 py-1 rounded-lg"><Calendar className="w-3.5 h-3.5 text-orange-400" /> {todayDate}</span>
@@ -516,21 +548,21 @@ export default function VideoTrimmer({ videoBlob, defaultTrimSeconds = 30, onBac
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5"><Tag className="w-3 h-3 text-orange-500" /> Club / Infos</label>
-                  <input type="text" value={clubName} onChange={(e) => setClubName(e.target.value)} placeholder="Ex: Fer 7, Tir..." className="w-full bg-zinc-950 border border-white/10 rounded-2xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-orange-500 shadow-inner" />
+                  <input type="text" value={clubName} onChange={(e) => setClubName(e.target.value)} placeholder="Ex: Fer 7, Tir..." className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-3 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-orange-500 shadow-inner" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5"><FileText className="w-3 h-3 text-orange-500" /> Commentaire</label>
-                  <input type="text" value={sessionNote} onChange={(e) => setSessionNote(e.target.value)} placeholder="Ex: Bon tempo..." className="w-full bg-zinc-950 border border-white/10 rounded-2xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-orange-500 shadow-inner" />
+                  <input type="text" value={sessionNote} onChange={(e) => setSessionNote(e.target.value)} placeholder="Ex: Bon tempo..." className="w-full bg-zinc-950 border border-white/10 rounded-xl px-3 py-3 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-orange-500 shadow-inner" />
                 </div>
               </div>
             </div>
           )}
-
         </div>
 
-        <button onClick={handleExportTrimmedVideo} disabled={isExporting} className="w-full py-3.5 rounded-2xl bg-orange-500 text-black font-extrabold text-xs shadow-[0_4px_20px_rgba(249,115,22,0.3)] hover:bg-orange-400 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-95 mt-2">
+        {/* Bouton Sauvegarde */}
+        <button onClick={handleExportTrimmedVideo} disabled={isExporting} className="w-full py-3.5 rounded-xl bg-orange-500 text-black font-extrabold text-xs shadow-[0_4px_20px_rgba(249,115,22,0.3)] hover:bg-orange-400 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-95 shrink-0">
           {isExporting ? (
-            <><div className="w-4 h-4 border-2 border-black border-t-transparent uppercase rounded-full animate-spin" /><span className="uppercase tracking-widest">Sauvegarde</span></>
+            <><div className="w-4 h-4 border-2 border-black border-t-transparent uppercase rounded-full animate-spin" /><span className="uppercase tracking-widest">Sauvegarde...</span></>
           ) : success ? (
             <><Check className="w-4 h-4 text-black uppercase stroke-[3]" /><span className="uppercase tracking-widest">Vidéo sauvegardée !</span></>
           ) : (

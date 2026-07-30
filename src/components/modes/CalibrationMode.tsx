@@ -17,11 +17,12 @@ interface CalibrationModeProps {
   videoBlob: Blob | null;
   bufferSeconds?: number;
   initialShapes?: Shape[];
+  facingMode?: 'environment' | 'user'; // AJOUT : Gestion de la caméra frontale
   onSave: (shapes: Shape[]) => void;
   onCancel: () => void;
 }
 
-export default function CalibrationMode({ videoBlob, bufferSeconds = 30, initialShapes = [], onSave, onCancel }: CalibrationModeProps) {
+export default function CalibrationMode({ videoBlob, bufferSeconds = 30, initialShapes = [], facingMode = 'environment', onSave, onCancel }: CalibrationModeProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoUrl, setVideoUrl] = useState<string>('');
 
@@ -173,7 +174,8 @@ export default function CalibrationMode({ videoBlob, bufferSeconds = 30, initial
             playsInline
             onLoadedMetadata={handleLoadedMetadata}
             onTimeUpdate={handleTimeUpdate}
-            className="w-full h-full object-contain pointer-events-none"
+            /* EFFET MIROIR APPLIQUÉ ICI SI CAMÉRA FRONTALE */
+            className={`w-full h-full object-contain pointer-events-none ${facingMode === 'user' ? '-scale-x-100' : ''}`}
           />
         ) : (
           <div className="flex flex-col items-center justify-center w-full h-full text-zinc-500 text-xs gap-2">
@@ -284,11 +286,11 @@ export default function CalibrationMode({ videoBlob, bufferSeconds = 30, initial
         </div>
       </div>
 
-      {/* 2. MENU INFÉRIEUR FIXE + SAFE AREA POUR LA BARRE ANDROID */}
-      <div className="w-full bg-zinc-900 border-t border-white/10 p-5 shrink-0 flex flex-col justify-between shadow-2xl pointer-events-auto pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
+      {/* 2. MENU INFÉRIEUR FIXÉ À 320px STRICTEMENT */}
+      <div className="w-full h-[320px] bg-zinc-900 border-t border-white/10 p-4 shrink-0 flex flex-col justify-between shadow-2xl pointer-events-auto pb-[calc(1rem+env(safe-area-inset-bottom))] overflow-hidden">
         
         {/* EN-TÊTE DU MENU */}
-        <div className="flex items-center justify-between pb-3 border-b border-white/5">
+        <div className="flex items-center justify-between pb-3 border-b border-white/5 shrink-0">
           <h3 className="text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2">
             <Sliders className="w-4 h-4 text-orange-500" />
             Calibration des repères
@@ -303,7 +305,7 @@ export default function CalibrationMode({ videoBlob, bufferSeconds = 30, initial
         </div>
 
         {/* ZONE CENTRALE DU MENU */}
-        <div className="flex-1 flex flex-col justify-center space-y-4 py-2">
+        <div className="flex-1 flex flex-col justify-center space-y-4 py-2 min-h-0">
           
           {/* Timeline */}
           <div className="space-y-1">
@@ -333,16 +335,16 @@ export default function CalibrationMode({ videoBlob, bufferSeconds = 30, initial
 
           {/* Outils de dessin */}
           <div className="flex items-center justify-between gap-2">
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full">
               <button
                 onClick={() => handleAddShape('circle')}
-                className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border border-white/5 active:scale-95 shadow-sm"
+                className="flex-1 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer border border-white/5 active:scale-95 shadow-sm"
               >
                 <Circle className="w-4 h-4 text-orange-500" /> + Rond
               </button>
               <button
                 onClick={() => handleAddShape('line')}
-                className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border border-white/5 active:scale-95 shadow-sm"
+                className="flex-1 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer border border-white/5 active:scale-95 shadow-sm"
               >
                 <Minus className="w-4 h-4 text-orange-500" /> + Ligne
               </button>
@@ -351,7 +353,7 @@ export default function CalibrationMode({ videoBlob, bufferSeconds = 30, initial
             {shapes.length > 0 && (
               <button
                 onClick={handleClearAll}
-                className="px-3 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 transition cursor-pointer border border-red-500/20 active:scale-95 shadow-sm flex items-center gap-1 text-xs font-bold"
+                className="px-3 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 transition cursor-pointer border border-red-500/20 active:scale-95 shadow-sm flex items-center justify-center gap-1 text-xs font-bold shrink-0"
                 title="Tout effacer"
               >
                 <RotateCcw className="w-4 h-4" />
@@ -362,7 +364,7 @@ export default function CalibrationMode({ videoBlob, bufferSeconds = 30, initial
           {/* Option de suppression individuelle */}
           <div className="h-10">
             {selectedShape ? (
-              <div className="h-full flex items-center justify-between bg-zinc-950/60 px-3 py-1.5 rounded-xl border border-orange-500/30">
+              <div className="h-full flex items-center justify-between bg-zinc-950/60 px-3 rounded-xl border border-orange-500/30">
                 <span className="text-[11px] font-bold text-orange-400 uppercase">Élément sélectionné</span>
                 <button
                   onClick={() => {
@@ -375,8 +377,8 @@ export default function CalibrationMode({ videoBlob, bufferSeconds = 30, initial
                 </button>
               </div>
             ) : (
-              <div className="h-full flex items-center justify-center text-[11px] font-medium text-zinc-500 uppercase tracking-wider border border-dashed border-white/5 rounded-xl">
-                Sélectionnez un repère pour le modifier
+              <div className="h-full flex items-center justify-center text-[10px] font-medium text-zinc-500 uppercase tracking-wider border border-dashed border-white/5 rounded-xl">
+                Sélectionnez un repère pour modifier
               </div>
             )}
           </div>
@@ -386,7 +388,7 @@ export default function CalibrationMode({ videoBlob, bufferSeconds = 30, initial
         {/* BOUTON VALIDER */}
         <button
           onClick={() => onSave(shapes)}
-          className="w-full py-3.5 rounded-2xl bg-orange-500 text-black font-extrabold text-xs shadow-[0_4px_20px_rgba(249,115,22,0.3)] hover:bg-orange-400 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 mt-2"
+          className="w-full py-3.5 rounded-xl bg-orange-500 text-black font-extrabold text-xs shadow-[0_4px_20px_rgba(249,115,22,0.3)] hover:bg-orange-400 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 shrink-0"
         >
           <Check className="w-4 h-4 stroke-[3]" /> Enregistrer les repères
         </button>
