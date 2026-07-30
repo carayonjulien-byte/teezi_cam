@@ -17,7 +17,8 @@ import {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-orange-500 selection:text-black flex flex-col justify-between overflow-x-hidden">
+    // CORRECTION : On retire le flex et justify-between pour laisser la page scroller naturellement
+    <div className="min-h-screen bg-black text-white selection:bg-orange-500 selection:text-black overflow-x-hidden">
       
       {/* 1. HEADER / NAVIGATION */}
       <header className="w-full max-w-6xl mx-auto px-6 py-6 flex items-center justify-between z-10">
@@ -40,7 +41,7 @@ export default function LandingPage() {
       </header>
 
       {/* 2. HERO SECTION */}
-      <main className="flex-1 w-full max-w-4xl mx-auto px-6 pt-8 pb-16 flex flex-col items-center text-center justify-center">
+      <main className="w-full max-w-4xl mx-auto px-6 pt-8 pb-16 flex flex-col items-center text-center">
         
         {/* Badge Flottant */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-bold tracking-wider uppercase mb-6 animate-pulse">
@@ -184,7 +185,7 @@ export default function LandingPage() {
       </main>
 
       {/* 5. FOOTER */}
-      <footer className="w-full border-t border-white/5 py-6 text-center text-xs text-zinc-600">
+      <footer className="w-full border-t border-white/5 py-8 text-center text-xs text-zinc-600">
         <p>© {new Date().getFullYear()} TEEZI Cam — L'outil d'analyse de swing épuré.</p>
       </footer>
 

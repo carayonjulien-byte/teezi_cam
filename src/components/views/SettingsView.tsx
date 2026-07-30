@@ -75,7 +75,7 @@ export function SettingsView({ onBack }: SettingsViewProps) {
             <span className="text-xs font-bold uppercase tracking-widest text-zinc-500 ml-4">Support</span>
             
             <div className="bg-zinc-900 border border-white/5 rounded-3xl overflow-hidden shadow-lg">
-              <a href="mailto:contact@teezi.com" className="w-full flex items-center justify-between p-4 hover:bg-zinc-800/80 transition active:bg-zinc-800 cursor-pointer">
+              <a href="mailto:bonjour@teezi.com" className="w-full flex items-center justify-between p-4 hover:bg-zinc-800/80 transition active:bg-zinc-800 cursor-pointer">
                 <div className="flex items-center gap-3">
                   <Mail className="w-5 h-5 text-orange-500" />
                   <span className="font-medium text-sm text-zinc-200">Nous contacter</span>
