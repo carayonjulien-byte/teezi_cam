@@ -7,8 +7,7 @@ import { ArrowLeft, FileText } from 'lucide-react';
 export default function MentionsLegalesPage() {
   return (
     // CONTENEUR PRINCIPAL : min-h-screen et py-12 pour permettre un scroll fluide et naturel
-    <div className="min-h-screen bg-black text-white px-4 py-10 selection:bg-orange-500 selection:text-black">
-      <div className="max-w-3xl mx-auto space-y-8">
+<div className="h-full w-full overflow-y-auto bg-black text-white px-4 py-10 selection:bg-orange-500 selection:text-black">      <div className="max-w-3xl mx-auto space-y-8">
         
         {/* BOUTON RETOUR */}
         <div>

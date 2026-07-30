@@ -18,9 +18,7 @@ import {
 export default function LandingPage() {
   return (
     // CORRECTION : On retire le flex et justify-between pour laisser la page scroller naturellement
-    <div className="min-h-screen bg-black text-white selection:bg-orange-500 selection:text-black overflow-x-hidden">
-      
-      {/* 1. HEADER / NAVIGATION */}
+  <div className="h-full w-full overflow-y-auto bg-black text-white selection:bg-orange-500 selection:text-black">      {/* 1. HEADER / NAVIGATION */}
       <header className="w-full max-w-6xl mx-auto px-6 py-6 flex items-center justify-between z-10">
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center font-black text-black text-lg shadow-[0_0_20px_rgba(249,115,22,0.4)]">

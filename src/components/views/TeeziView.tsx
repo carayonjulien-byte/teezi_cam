@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Clock, Play, Video, Film, Lock, Target, AlertCircle } from 'lucide-react';
+import { Clock, Play, Video, Film, Lock, Target, AlertCircle, Volume2 } from 'lucide-react';
 import PracticeMode from '@/components/modes/PracticeMode';
+import CourseMode from '@/components/modes/CourseMode';
 import SessionLibraryView from '@/components/views/SessionLibraryView';
 import { getSessionVideos, clearSession, deleteVideoFromSession, SessionVideo } from '@/utils/sessionStore';
 
@@ -28,6 +29,7 @@ const VideoThumbnail = ({ blob }: { blob: Blob }) => {
 };
 
 export function TeeziView() {
+  const [isCourseOpen, setIsCourseOpen] = useState(false);
   const [isPracticeOpen, setIsPracticeOpen] = useState(false);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
@@ -35,10 +37,10 @@ export function TeeziView() {
 
   // On réinitialise le scroll à zéro à chaque ouverture de vue plein écran
   useEffect(() => {
-    if (isPracticeOpen || isLibraryOpen) {
-      window.scrollTo(0, 0);
-    }
-  }, [isPracticeOpen, isLibraryOpen]);
+  if (isPracticeOpen || isCourseOpen || isLibraryOpen) {
+    window.scrollTo(0, 0);
+  }
+  }, [isPracticeOpen, isCourseOpen, isLibraryOpen]);
 
   const loadVideos = async () => {
     try {
@@ -78,10 +80,22 @@ export function TeeziView() {
     }
   };
 
+  const handleOpenCourse = () => {
+  if (sessionVideos.length >= 15) {
+    alert("Mémoire pleine (15/15) ⚠️\nVeuillez supprimer des vidéos avant de relancer le mode Parcours.");
+  } else {
+    setIsCourseOpen(true);
+  }
+};
+
   // On renvoie PracticeMode directement sans wrapper scrollable parasite
   if (isPracticeOpen) {
     return <PracticeMode onBackToMenu={() => setIsPracticeOpen(false)} />;
   }
+
+  if (isCourseOpen) {
+  return <CourseMode onBackToMenu={() => setIsCourseOpen(false)} />;
+  }   
 
   if (isLibraryOpen) {
     return (
@@ -135,16 +149,22 @@ export function TeeziView() {
               <div className="mt-5 flex items-center justify-center w-full bg-orange-500 text-black py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider">Démarrer ➔</div>
             </div>
 
-            <div className="min-w-[240px] flex-1 snap-center p-5 rounded-2xl bg-zinc-900/50 border border-white/5 flex flex-col justify-between opacity-60 grayscale">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-zinc-800 text-zinc-500 flex items-center justify-center"><Play className="w-5 h-5 fill-current" /></div>
-                  <span className="flex items-center gap-1 text-[9px] font-bold text-zinc-400 bg-zinc-800 px-2 py-1 rounded-md uppercase tracking-widest"><Lock className="w-3 h-3" /> Bientôt</span>
-                </div>
-                <h3 className="text-base font-black text-white mb-2">Mode Parcours</h3>
-                <p className="text-xs text-zinc-500 leading-relaxed">Enregistrez vos coups sur le terrain, assignez le trou et le club joués.</p>
-              </div>
-            </div>
+            <div 
+  onClick={handleOpenCourse} 
+  className="min-w-[240px] flex-1 snap-center p-5 rounded-2xl bg-zinc-900 border border-orange-500/50 shadow-[0_0_20px_rgba(249,115,22,0.1)] transition-all cursor-pointer flex flex-col justify-between"
+>
+  <div>
+    <div className="flex items-center justify-between mb-4">
+      <div className="w-10 h-10 rounded-xl bg-orange-500 text-black flex items-center justify-center">
+        <Volume2 className="w-5 h-5" />
+      </div>
+      <span className="text-[10px] font-bold text-orange-400 bg-orange-500/10 px-2 py-1 rounded-md uppercase tracking-wider">Automatique</span>
+    </div>
+    <h3 className="text-base font-black text-white mb-2">Mode Parcours</h3>
+    <p className="text-xs text-zinc-400 leading-relaxed">Détection audio automatique (clac de balle). Enregistrement intelligent coup par coup.</p>
+  </div>
+  <div className="mt-5 flex items-center justify-center w-full bg-orange-500 text-black py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider">Démarrer ➔</div>
+</div>
           </div>
         </div>
 
