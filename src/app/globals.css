@@ -1,8 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* 1. ON FORCE LE NAVIGATEUR EN MODE SOMBRE */
+  color-scheme: dark;
+  
+  /* 2. ON FORCE LES VARIABLES PAR DÉFAUT EN NOIR */
+  --background: #000000;
+  --foreground: #ffffff;
 }
 
 @theme inline {
@@ -12,17 +16,13 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  
+  /* On sécurise aussi le body */
+  color-scheme: dark;
 }
 
 /* Astuce pour forcer le faux-téléphone sur PC/iPad */

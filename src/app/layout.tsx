@@ -4,6 +4,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -31,21 +32,16 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  colorScheme: 'dark',
   viewportFit: "cover",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+// Dans src/app/layout.tsx (à la racine)
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="fr"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      {/* Plein écran classique pour le site / landing page */}
-      <body className="min-h-full bg-black text-white">
+    <html lang="fr">
+      {/* On ajoute overflow-hidden, fixed et inset-0 pour tuer le scroll du navigateur */}
+      <body className="fixed inset-0 w-screen h-[100dvh] overflow-hidden bg-black text-white">
         {children}
       </body>
     </html>
