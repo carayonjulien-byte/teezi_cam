@@ -37,9 +37,9 @@ export function TeeziView() {
 
   // On réinitialise le scroll à zéro à chaque ouverture de vue plein écran
   useEffect(() => {
-  if (isPracticeOpen || isCourseOpen || isLibraryOpen) {
-    window.scrollTo(0, 0);
-  }
+    if (isPracticeOpen || isCourseOpen || isLibraryOpen) {
+      window.scrollTo(0, 0);
+    }
   }, [isPracticeOpen, isCourseOpen, isLibraryOpen]);
 
   const loadVideos = async () => {
@@ -51,9 +51,10 @@ export function TeeziView() {
     }
   };
 
+  // CORRECTION ICI : On écoute aussi isCourseOpen pour recharger les vidéos quand on revient du mode Parcours !
   useEffect(() => {
     loadVideos();
-  }, [isPracticeOpen, isLibraryOpen]);
+  }, [isPracticeOpen, isCourseOpen, isLibraryOpen]);
 
   const handleClearSession = async () => {
     if (window.confirm("Êtes-vous sûr de vouloir supprimer toutes les vidéos de cette session ?")) {
@@ -73,28 +74,27 @@ export function TeeziView() {
   };
 
   const handleOpenPractice = () => {
-    if (sessionVideos.length >= 15) {
-      alert("Mémoire pleine (15/15) ⚠️\nVeuillez supprimer des vidéos dans la section 'Vidéos en cours' avant de relancer le Practice.");
+    if (sessionVideos.length >= 30) {
+      alert("Mémoire pleine (30/30) ⚠️\nVeuillez supprimer des vidéos dans la section 'Vidéos en cours' avant de relancer le Practice.");
     } else {
       setIsPracticeOpen(true);
     }
   };
 
   const handleOpenCourse = () => {
-  if (sessionVideos.length >= 15) {
-    alert("Mémoire pleine (15/15) ⚠️\nVeuillez supprimer des vidéos avant de relancer le mode Parcours.");
-  } else {
-    setIsCourseOpen(true);
-  }
-};
+    if (sessionVideos.length >= 30) {
+      alert("Mémoire pleine (30/30) ⚠️\nVeuillez supprimer des vidéos avant de relancer le mode Parcours.");
+    } else {
+      setIsCourseOpen(true);
+    }
+  };
 
-  // On renvoie PracticeMode directement sans wrapper scrollable parasite
   if (isPracticeOpen) {
     return <PracticeMode onBackToMenu={() => setIsPracticeOpen(false)} />;
   }
 
   if (isCourseOpen) {
-  return <CourseMode onBackToMenu={() => setIsCourseOpen(false)} />;
+    return <CourseMode onBackToMenu={() => setIsCourseOpen(false)} />;
   }   
 
   if (isLibraryOpen) {
@@ -109,13 +109,9 @@ export function TeeziView() {
   }
 
   return (
-    // CONTENEUR AVEC SCROLL INTERNE
     <div className="w-full h-full overflow-y-auto relative scroll-smooth">
-      
-      {/* ZONE DE CONTENU (avec safe-area en bas) */}
       <div className="w-full max-w-md mx-auto px-6 flex flex-col gap-6 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom))]">
         
-        {/* Titre */}
         <div className="-mt-2 mb-2">
           <h1 className="text-3xl font-black text-white tracking-tight leading-tight">
             Prêt à <br/>
@@ -125,7 +121,7 @@ export function TeeziView() {
           </h1>
         </div>
 
-        {/* BLOC 1 : ENCADRÉ "CHOIX DU MODE" */}
+        {/* BLOC 1 : CHOIX DU MODE */}
         <div className="bg-zinc-950/80 border border-white/10 rounded-[32px] p-5 sm:p-6 flex flex-col gap-4 shadow-2xl">
           <div className="flex items-end justify-between">
             <div>
@@ -150,25 +146,25 @@ export function TeeziView() {
             </div>
 
             <div 
-  onClick={handleOpenCourse} 
-  className="min-w-[240px] flex-1 snap-center p-5 rounded-2xl bg-zinc-900 border border-orange-500/50 shadow-[0_0_20px_rgba(249,115,22,0.1)] transition-all cursor-pointer flex flex-col justify-between"
->
-  <div>
-    <div className="flex items-center justify-between mb-4">
-      <div className="w-10 h-10 rounded-xl bg-orange-500 text-black flex items-center justify-center">
-        <Volume2 className="w-5 h-5" />
-      </div>
-      <span className="text-[10px] font-bold text-orange-400 bg-orange-500/10 px-2 py-1 rounded-md uppercase tracking-wider">Automatique</span>
-    </div>
-    <h3 className="text-base font-black text-white mb-2">Mode Parcours</h3>
-    <p className="text-xs text-zinc-400 leading-relaxed">Détection audio automatique (clac de balle). Enregistrement intelligent coup par coup.</p>
-  </div>
-  <div className="mt-5 flex items-center justify-center w-full bg-orange-500 text-black py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider">Démarrer ➔</div>
-</div>
+              onClick={handleOpenCourse} 
+              className="min-w-[240px] flex-1 snap-center p-5 rounded-2xl bg-zinc-900 border border-orange-500/50 shadow-[0_0_20px_rgba(249,115,22,0.1)] transition-all cursor-pointer flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-orange-500 text-black flex items-center justify-center">
+                    <Volume2 className="w-5 h-5" />
+                  </div>
+                  <span className="text-[10px] font-bold text-orange-400 bg-orange-500/10 px-2 py-1 rounded-md uppercase tracking-wider">Automatique</span>
+                </div>
+                <h3 className="text-base font-black text-white mb-2">Mode Parcours</h3>
+                <p className="text-xs text-zinc-400 leading-relaxed">Détection audio automatique (clac de balle). Enregistrement intelligent coup par coup.</p>
+              </div>
+              <div className="mt-5 flex items-center justify-center w-full bg-orange-500 text-black py-2.5 rounded-lg font-bold text-xs uppercase tracking-wider">Démarrer ➔</div>
+            </div>
           </div>
         </div>
 
-        {/* BLOC 2 : ENCADRÉ "VIDÉOS EN COURS" */}
+        {/* BLOC 2 : VIDÉOS EN COURS */}
         <div className="bg-zinc-950/80 border border-white/10 rounded-[32px] p-5 sm:p-6 flex flex-col gap-4 shadow-2xl">
           <div className="flex items-end justify-between">
             <div>

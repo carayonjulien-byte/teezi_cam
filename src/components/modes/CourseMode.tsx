@@ -57,7 +57,7 @@ export default function CourseMode({ onBackToMenu }: CourseModeProps) {
 
   useAudioTrigger({
     stream: audioStream,
-    enabled: isAutoListening,
+    enabled: isAutoListening && !isSavingClip,
     threshold: thresholdValue,
     onLevelUpdate: (level) => {
       setAudioLevel(level);
@@ -65,7 +65,12 @@ export default function CourseMode({ onBackToMenu }: CourseModeProps) {
     onImpact: async () => {
       if (isSavingClip) return; 
       setIsSavingClip(true);
-      setNotification("🎯 Impact détecté ! Enregistrement...");
+      setNotification("🎯 Impact détecté ! Enregistrement du finish (10s)...");
+
+      // On attend 10 secondes après le clac pour laisser le temps au swing de se terminer
+      await new Promise((resolve) => setTimeout(resolve, 10000));
+
+      setNotification("💾 Sauvegarde de la vidéo...");
 
       if (cameraRef.current) {
         const videoBlob = await cameraRef.current.stopAndGetRecording();
@@ -75,7 +80,7 @@ export default function CourseMode({ onBackToMenu }: CourseModeProps) {
               blob: videoBlob,
               date: new Date().toLocaleTimeString('fr-FR'),
               club: "Coup Auto (Audio)",
-              duration: "0:08"
+              duration: "0:30" // On conserve les 30s du buffer CameraEngine
             });
           } catch (e) {
             console.error("Erreur sauvegarde auto :", e);
@@ -97,10 +102,11 @@ export default function CourseMode({ onBackToMenu }: CourseModeProps) {
       {/* ZONE VIDÉO LIVE */}
       <div className="relative flex-1 min-h-0 w-full bg-zinc-950 flex items-center justify-center overflow-hidden">
         
+        {/* On garde le CameraEngine d'origine avec son buffer de 30s */}
         <CameraEngine 
           key={liveKey} 
           ref={cameraRef} 
-          bufferSeconds={8} 
+          bufferSeconds={30} 
           facingMode={facingMode} 
         />
         
@@ -114,8 +120,8 @@ export default function CourseMode({ onBackToMenu }: CourseModeProps) {
         )}
 
         {notification && (
-          <div className="absolute top-20 left-1/2 -translate-x-1/2 z-40 bg-orange-500 text-black font-extrabold px-5 py-2.5 rounded-full shadow-[0_0_25px_rgba(249,115,22,0.8)] flex items-center gap-2 animate-bounce text-xs uppercase tracking-wider">
-            <Zap className="w-4 h-4 fill-current" />
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 z-40 bg-orange-500 text-black font-extrabold px-5 py-2.5 rounded-full shadow-[0_0_25px_rgba(249,115,22,0.8)] flex items-center gap-2 animate-bounce text-xs uppercase tracking-wider text-center">
+            <Zap className="w-4 h-4 fill-current shrink-0" />
             <span>{notification}</span>
           </div>
         )}
@@ -124,7 +130,7 @@ export default function CourseMode({ onBackToMenu }: CourseModeProps) {
           {onBackToMenu && (
             <button onClick={onBackToMenu} className="w-10 h-10 rounded-full bg-zinc-900/85 backdrop-blur-md border border-white/10 text-white flex items-center justify-center hover:bg-zinc-800 transition active:scale-95 cursor-pointer shadow-lg">✕</button>
           )}
-          <button onClick={() => setFacingMode(prev => prev === 'environment' ? 'user' : 'environment')} className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white flex items-center justify-center hover:bg-black/70 transition active:scale-95 shadow-lg cursor-pointer">
+          <button onClick={() => setFacingMode(prev => prev === 'environment' ? 'user' : 'environment')} className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white flex items-center justify-center hover:bg-black/70 transition active:scale-95 cursor-pointer">
             <SwitchCamera className="w-4 h-4 text-orange-500" />
           </button>
           <button onClick={() => setShowGrid(!showGrid)} className={`w-10 h-10 rounded-full backdrop-blur-md border transition flex items-center justify-center shadow-lg active:scale-95 cursor-pointer ${showGrid ? 'bg-orange-500/20 border-orange-500 text-orange-500' : 'bg-black/50 border-white/10 text-white hover:bg-black/70'}`}>
@@ -133,7 +139,7 @@ export default function CourseMode({ onBackToMenu }: CourseModeProps) {
         </div>
       </div>
 
-      {/* PANNEAU INFÉRIEUR (Fixé à 320px de hauteur, comme le PracticeMode) */}
+      {/* PANNEAU INFÉRIEUR (320px) */}
       <div className="w-full h-[320px] bg-zinc-900 border-t border-white/10 p-5 shrink-0 flex flex-col justify-between shadow-2xl pb-[calc(1.25rem+env(safe-area-inset-bottom))] overflow-hidden">
         
         <div className="flex-1 flex flex-col justify-center gap-4 min-h-0">
@@ -158,7 +164,6 @@ export default function CourseMode({ onBackToMenu }: CourseModeProps) {
               </span>
             </div>
             
-            {/* JAUGE GRAPHIQUE */}
             <div className="w-full h-3 bg-zinc-800 rounded-full overflow-hidden relative">
               <div 
                 className={`h-full transition-all duration-75 ${audioLevel > thresholdValue ? 'bg-orange-500' : 'bg-orange-500/60'}`}
@@ -170,7 +175,6 @@ export default function CourseMode({ onBackToMenu }: CourseModeProps) {
               />
             </div>
 
-            {/* CURSEUR DE SENSIBILITÉ */}
             <div className="flex items-center gap-4 pt-3">
               <span className="text-[11px] uppercase font-black text-zinc-500 tracking-wider">Sensibilité</span>
               <input 
@@ -186,7 +190,6 @@ export default function CourseMode({ onBackToMenu }: CourseModeProps) {
           
         </div>
 
-        {/* Bouton d'Action Principal */}
         <div className="pt-2 shrink-0">
           <button
             onClick={async () => {
@@ -198,7 +201,7 @@ export default function CourseMode({ onBackToMenu }: CourseModeProps) {
                       blob: blob,
                       date: new Date().toLocaleTimeString('fr-FR'),
                       club: "Coup Manuel",
-                      duration: "0:08"
+                      duration: "0:30"
                     });
                   } catch (e) {
                     console.error(e);
